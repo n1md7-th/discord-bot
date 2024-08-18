@@ -1,6 +1,7 @@
 import {
   ActivityType,
   Client,
+  EmbedBuilder,
   Events,
   GatewayIntentBits,
   type Message,
@@ -15,6 +16,7 @@ import { NameMaker } from '../utils/name.maker.ts';
 import { CreateHandler } from './abstract/create.handler.ts';
 import { ReactionCommandService } from './commands/reaction-command.service.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
+import { HelpHandler } from './handlers/message-create/help.handler.ts';
 import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
 
 export class DiscordBot {
@@ -29,6 +31,7 @@ export class DiscordBot {
   readonly createHandlers: {
     thread: CreateHandler;
     channel: CreateHandler;
+    help: CreateHandler;
   };
 
   id!: string;
@@ -58,6 +61,7 @@ export class DiscordBot {
     this.createHandlers = {
       thread: new ThreadHandler(this),
       channel: new ChannelHandler(this),
+      help: new HelpHandler(this),
     };
 
     this.onError = this.onError.bind(this);
@@ -103,6 +107,10 @@ export class DiscordBot {
     if (message.author.bot) return;
 
     this.logger.info(`[${message.author.username}]: ${message.content}`);
+
+    if (message.content.startsWith('!help')) {
+      return await this.createHandlers.help.handle(message);
+    }
 
     if (message.channel.isThread()) {
       if (message.content.startsWith('!skip')) return;
