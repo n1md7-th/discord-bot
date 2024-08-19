@@ -26,6 +26,17 @@ export class Trie<Type = unknown> {
     node.isEnd = true;
   }
 
+  get(key: string) {
+    let node = this.root;
+    for (const c of key) {
+      const char = c.toLowerCase();
+      if (!node.has(char)) return;
+      node = node.get(char);
+    }
+
+    return node.value;
+  }
+
   has(key: string): boolean {
     let node = this.root;
     for (const c of key) {
@@ -48,9 +59,9 @@ export class Trie<Type = unknown> {
     return true;
   }
 
-  get(key: string) {
+  getByPrefix(prefix: string): Type | undefined {
     let node = this.root;
-    for (const c of key) {
+    for (const c of prefix) {
       const char = c.toLowerCase();
       if (!node.has(char)) return;
       node = node.get(char);

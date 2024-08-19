@@ -1,7 +1,6 @@
 import {
   ActivityType,
   Client,
-  EmbedBuilder,
   Events,
   GatewayIntentBits,
   type Message,
@@ -14,7 +13,8 @@ import { Conversations } from '../ai/conversations.ts';
 import { Logger } from '../utils/logger.ts';
 import { NameMaker } from '../utils/name.maker.ts';
 import { CreateHandler } from './abstract/create.handler.ts';
-import { ReactionCommandService } from './commands/reaction-command.service.ts';
+import { ReactionCommands } from './commands/reaction.commands.ts';
+import { StringCommands } from './commands/string.commands.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
 import { HelpHandler } from './handlers/message-create/help.handler.ts';
 import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
@@ -25,7 +25,8 @@ export class DiscordBot {
   readonly grammarlyThreadName: Generator<string>;
   readonly techBroThreadName: Generator<string>;
   readonly conversations: Conversations;
-  readonly commands: ReactionCommandService;
+  readonly reactionCommands: ReactionCommands;
+  readonly stringCommands: StringCommands;
   readonly logger: Logger;
   readonly client: Client;
   readonly createHandlers: {
@@ -41,7 +42,8 @@ export class DiscordBot {
 
   constructor(logger: Logger) {
     this.logger = logger;
-    this.commands = new ReactionCommandService(this);
+    this.reactionCommands = new ReactionCommands(this);
+    this.stringCommands = new StringCommands(this);
     this.conversations = new Conversations(this.logger);
     this.grammarlyThreadName = this.nameMaker.makeThreadName('Grammarly');
     this.techBroThreadName = this.nameMaker.makeThreadName('Tech Bro');
@@ -126,7 +128,7 @@ export class DiscordBot {
 
     this.logger.info(`Reaction added: ${reaction.emoji.name} by ${user.username}`);
 
-    const command = this.commands.getByEmoji(reaction.emoji);
+    const command = this.reactionCommands.getByEmoji(reaction.emoji);
 
     if (command) {
       await command.execute(reaction, user);

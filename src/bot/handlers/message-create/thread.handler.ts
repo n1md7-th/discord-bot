@@ -5,7 +5,7 @@ export class ThreadHandler extends CreateHandler {
   async handle(message: Message) {
     this.bot.logger.info('Thread handler invoked');
 
-    const command = this.bot.commands.getByMessagePrefix(message.content);
+    const command = this.bot.stringCommands.getByMessage(message.content);
 
     if (command) {
       await command.execute(message);
