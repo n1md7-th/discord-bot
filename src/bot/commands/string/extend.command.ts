@@ -1,5 +1,5 @@
 import type { Message } from 'discord.js';
-import { MessageCommand } from '../abstract/message.command.ts';
+import { MessageCommand } from '../../abstract/message.command.ts';
 
 export class ExtendCommand extends MessageCommand {
   async execute(message: Message<boolean>) {

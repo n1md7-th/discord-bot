@@ -1,9 +1,9 @@
 import type { MessageCommand } from '../abstract/message.command.ts';
 import { DiscordBot } from '../discord.bot.ts';
 import { StringCommand } from '../enums/command.enum.ts';
-import { DisableCommand } from './disable.command.ts';
-import { EnableCommand } from './enable.command.ts';
-import { ExtendCommand } from './extend.command.ts';
+import { DisableCommand } from './string/disable.command.ts';
+import { EnableCommand } from './string/enable.command.ts';
+import { ExtendCommand } from './string/extend.command.ts';
 
 export class StringCommands {
   private readonly extend: MessageCommand;

@@ -2,7 +2,8 @@ import type { ReactionCommand } from '../abstract/reaction.command.ts';
 import { EmojiCommand } from '../enums/command.enum.ts';
 import { GuildEmoji, type ReactionEmoji } from 'discord.js';
 import { DiscordBot } from '../discord.bot.ts';
-import { GrammarlyCommand } from './grammarly.command.ts';
+import { FingerCommand } from './emojis/finger.command.ts';
+import { GrammarlyCommand } from './emojis/grammarly.command.ts';
 
 export class ReactionCommands {
   private readonly commands: Map<EmojiCommand, ReactionCommand>;
@@ -11,6 +12,7 @@ export class ReactionCommands {
     this.commands = new Map();
 
     this.commands.set(EmojiCommand.Grammarly, new GrammarlyCommand(bot));
+    this.commands.set(EmojiCommand.Finger, new FingerCommand(bot));
   }
 
   getByEmoji(emoji: GuildEmoji | ReactionEmoji) {

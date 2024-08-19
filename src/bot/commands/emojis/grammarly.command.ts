@@ -6,9 +6,9 @@ import {
   type PartialUser,
   type User,
 } from 'discord.js';
-import type { Context } from '../../utils/context.ts';
-import { Randomizer } from '../../utils/randomizer.ts';
-import { ReactionCommand } from '../abstract/reaction.command.ts';
+import type { Context } from '../../../utils/context.ts';
+import { Randomizer } from '../../../utils/randomizer.ts';
+import { ReactionCommand } from '../../abstract/reaction.command.ts';
 
 export class GrammarlyCommand extends ReactionCommand {
   private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);

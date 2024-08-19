@@ -72,8 +72,9 @@ export class DiscordBot {
   }
 
   subscribe() {
-    this.client.on(Events.Error, this.onError);
     this.client.once(Events.ClientReady, this.onClientReady);
+
+    this.client.on(Events.Error, this.onError);
     this.client.on(Events.MessageCreate, this.onMessageCreate);
     this.client.on(Events.MessageReactionAdd, this.onMessageReactionAdd);
 
