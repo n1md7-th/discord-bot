@@ -6,14 +6,15 @@ import {
   type PartialUser,
   type User,
 } from 'discord.js';
+import type { Context } from '../../utils/context.ts';
 import { Randomizer } from '../../utils/randomizer.ts';
 import { ReactionCommand } from '../abstract/reaction.command.ts';
 
 export class GrammarlyCommand extends ReactionCommand {
   private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);
 
-  async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
-    this.bot.logger.info('Grammarly command invoked');
+  async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, context: Context) {
+    context.logger.info('Grammarly command invoked');
 
     if (reaction.message.content === null) return;
     if (reaction.message.hasThread) return;
@@ -27,12 +28,12 @@ export class GrammarlyCommand extends ReactionCommand {
 
     const thread = await this.createThread(reaction);
 
-    this.bot.logger.info(`Thread created: #${thread.id} - ${thread.name}`);
+    context.logger.info(`Thread created: #${thread.id} - ${thread.name}`);
 
-    const conversation = this.createConversation(reaction, thread);
-    const response = await conversation.sendRequest(this.bot.messageLimit);
+    const conversation = this.createConversation(reaction, thread, context);
+    const response = await conversation.sendRequest(context, this.bot.messageLimit);
 
-    this.bot.logger.info(
+    context.logger.info(
       `ResponseSize: ${response.size}. Limit: ${this.bot.messageLimit}. Chunks: ${response.chunks.length}.`,
     );
 
@@ -41,7 +42,7 @@ export class GrammarlyCommand extends ReactionCommand {
       await thread.send(message);
     }
 
-    this.bot.logger.info('Grammarly command executed');
+    context.logger.info('Grammarly command executed');
   }
 
   private async createThread(reaction: MessageReaction | PartialMessageReaction) {
@@ -52,8 +53,12 @@ export class GrammarlyCommand extends ReactionCommand {
     });
   }
 
-  private createConversation(reaction: MessageReaction | PartialMessageReaction, thread: AnyThreadChannel<boolean>) {
-    const conversation = this.bot.conversations.createOpenAiGrammarlyConversationBy(thread.id);
+  private createConversation(
+    reaction: MessageReaction | PartialMessageReaction,
+    thread: AnyThreadChannel<boolean>,
+    context: Context,
+  ) {
+    const conversation = this.bot.conversations.createOpenAiGrammarlyConversationBy(thread.id, context);
     conversation.addUserMessage(reaction.message.content!);
 
     return conversation;

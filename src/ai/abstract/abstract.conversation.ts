@@ -1,3 +1,4 @@
+import type { Context } from '../../utils/context.ts';
 import { Counter } from '../../utils/counter.ts';
 import { AiResponse } from '../response/ai.response.ts';
 
@@ -37,5 +38,5 @@ export abstract class Conversation {
     return this;
   }
 
-  abstract sendRequest(maxChunkSize?: number): Promise<AiResponse>;
+  abstract sendRequest(context: Context, maxChunkSize?: number): Promise<AiResponse>;
 }

@@ -1,14 +1,15 @@
 import { EmbedBuilder, type Message } from 'discord.js';
+import type { Context } from '../../../utils/context.ts';
 import { CreateHandler } from '../../abstract/create.handler.ts';
 import { version } from '../../../../package.json';
 
 export class HelpHandler extends CreateHandler {
-  async handle(message: Message) {
-    this.bot.logger.info('!Help handler invoked');
+  async handle(message: Message, context: Context) {
+    context.logger.info('!Help handler invoked');
 
     await message.channel.send({ embeds: [this.getHelpEmbed()] });
 
-    this.bot.logger.info('!Help handler executed');
+    context.logger.info('!Help handler executed');
   }
 
   private getHelpEmbed() {

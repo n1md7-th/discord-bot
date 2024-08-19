@@ -1,4 +1,4 @@
-import { Logger } from '../utils/logger.ts';
+import type { Context } from '../utils/context.ts';
 import { Conversation } from './abstract/abstract.conversation.ts';
 import { OpenAiStrategy } from './strategies/openai.ts';
 import { OpenAiTechBroTemplate } from './templates/openai/conversation.template.ts';
@@ -7,7 +7,7 @@ import { OpenAiGrammarlyTemplate } from './templates/openai/grammarly.template.t
 export class Conversations {
   private readonly conversations: Map<string, Conversation>;
 
-  constructor(private readonly logger: Logger) {
+  constructor() {
     this.conversations = new Map();
   }
 
@@ -27,32 +27,32 @@ export class Conversations {
     return this.conversations.delete(id);
   }
 
-  createOpenAiGrammarlyConversationBy(id: string) {
+  createOpenAiGrammarlyConversationBy(id: string, context: Context) {
     const template = new OpenAiGrammarlyTemplate();
     const strategy = new OpenAiStrategy(template);
 
-    return this.getOrCreateBy(id, strategy);
+    return this.getOrCreateBy(id, strategy, context);
   }
 
-  createOpenAiTechBroConversationBy(id: string) {
+  createOpenAiTechBroConversationBy(id: string, context: Context) {
     const template = new OpenAiTechBroTemplate();
     const strategy = new OpenAiStrategy(template);
 
-    return this.getOrCreateBy(id, strategy);
+    return this.getOrCreateBy(id, strategy, context);
   }
 
-  private addBy(id: string, conversation: Conversation) {
+  private addBy(id: string, conversation: Conversation, context: Context) {
     this.conversations.set(id, conversation);
 
-    this.logger.info(`Created conversation(${conversation.constructor.name}) for: ${id}`);
+    context.logger.info(`Created conversation(${conversation.constructor.name}) for: ${id}`);
 
     return conversation;
   }
 
-  private getOrCreateBy(id: string, conversation: Conversation) {
+  private getOrCreateBy(id: string, conversation: Conversation, context: Context) {
     const existing = this.getBy(id);
     if (existing) return existing;
 
-    return this.addBy(id, conversation);
+    return this.addBy(id, conversation, context);
   }
 }

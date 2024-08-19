@@ -1,25 +1,26 @@
 import { type AnyThreadChannel, type Message, ThreadAutoArchiveDuration } from 'discord.js';
+import type { Context } from '../../../utils/context.ts';
 import { Randomizer } from '../../../utils/randomizer.ts';
 import { CreateHandler } from '../../abstract/create.handler.ts';
 
 export class ChannelHandler extends CreateHandler {
   private readonly emojis = new Randomizer(['📱', '💻', '🖥️', '🦾', '👋', '👀', '🙃', '👻']);
 
-  async handle(message: Message) {
-    this.bot.logger.info('Channel handler invoked');
+  async handle(message: Message, context: Context) {
+    context.logger.info('Channel handler invoked');
 
     if (this.isBotMentioned(message)) {
-      this.bot.logger.info('Bot mentioned in the message');
+      context.logger.info('Bot mentioned in the message');
 
       await message.react(this.emojis.getRandom());
       await message.react(this.emojis.getRandom());
       await message.react(this.emojis.getRandom());
 
       const thread = await this.createThread(message);
-      const conversation = this.createConversation(message, thread);
-      const response = await conversation.sendRequest(this.bot.messageLimit);
+      const conversation = this.createConversation(message, thread, context);
+      const response = await conversation.sendRequest(context, this.bot.messageLimit);
 
-      this.bot.logger.info(
+      context.logger.info(
         `ResponseSize: ${response.size}. Limit: ${this.bot.messageLimit}. Chunks: ${response.chunks.length}.`,
       );
 
@@ -28,7 +29,7 @@ export class ChannelHandler extends CreateHandler {
       }
     }
 
-    this.bot.logger.info('Channel handler executed');
+    context.logger.info('Channel handler executed');
   }
 
   private isBotMentioned(message: Message) {
@@ -46,8 +47,8 @@ export class ChannelHandler extends CreateHandler {
     });
   }
 
-  private createConversation(message: Message, thread: AnyThreadChannel) {
-    const conversation = this.bot.conversations.createOpenAiTechBroConversationBy(thread.id);
+  private createConversation(message: Message, thread: AnyThreadChannel, context: Context) {
+    const conversation = this.bot.conversations.createOpenAiTechBroConversationBy(thread.id, context);
     conversation.addUserMessage(message.content);
 
     return conversation;

@@ -3,13 +3,14 @@ import {
   Client,
   Events,
   GatewayIntentBits,
-  type Message,
   MessageReaction,
+  type Message,
   type PartialMessageReaction,
   type PartialUser,
   type User,
 } from 'discord.js';
 import { Conversations } from '../ai/conversations.ts';
+import { Context } from '../utils/context.ts';
 import { Logger } from '../utils/logger.ts';
 import { NameMaker } from '../utils/name.maker.ts';
 import { CreateHandler } from './abstract/create.handler.ts';
@@ -27,7 +28,6 @@ export class DiscordBot {
   readonly conversations: Conversations;
   readonly reactionCommands: ReactionCommands;
   readonly stringCommands: StringCommands;
-  readonly logger: Logger;
   readonly client: Client;
   readonly createHandlers: {
     thread: CreateHandler;
@@ -40,11 +40,10 @@ export class DiscordBot {
   slug!: string;
   username!: string;
 
-  constructor(logger: Logger) {
-    this.logger = logger;
+  constructor(readonly logger: Logger) {
+    this.conversations = new Conversations();
     this.reactionCommands = new ReactionCommands(this);
     this.stringCommands = new StringCommands(this);
-    this.conversations = new Conversations(this.logger);
     this.grammarlyThreadName = this.nameMaker.makeThreadName('Grammarly');
     this.techBroThreadName = this.nameMaker.makeThreadName('Tech Bro');
     this.client = new Client({
@@ -108,30 +107,34 @@ export class DiscordBot {
   private async onMessageCreate(message: Message) {
     if (message.author.bot) return;
 
-    this.logger.info(`[${message.author.username}]: ${message.content}`);
+    const context = Context.fromMessage(message);
+
+    context.logger.info(`Message received: ${message.content}`);
 
     if (message.content.startsWith('!help')) {
-      return await this.createHandlers.help.handle(message);
+      return await this.createHandlers.help.handle(message, context);
     }
 
     if (message.channel.isThread()) {
       if (message.content.startsWith('!skip')) return;
 
-      return await this.createHandlers.thread.handle(message);
+      return await this.createHandlers.thread.handle(message, context);
     }
 
-    return await this.createHandlers.channel.handle(message);
+    return await this.createHandlers.channel.handle(message, context);
   }
 
   private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
     if (user.bot) return;
 
-    this.logger.info(`Reaction added: ${reaction.emoji.name} by ${user.username}`);
+    const context = Context.fromReaction(reaction, user);
+
+    context.logger.info(`Reaction added: ${reaction.emoji.name}`);
 
     const command = this.reactionCommands.getByEmoji(reaction.emoji);
 
     if (command) {
-      await command.execute(reaction, user);
+      await command.execute(reaction, user, context);
     }
   }
 

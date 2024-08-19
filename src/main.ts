@@ -2,7 +2,7 @@ import { DiscordBot } from './bot/discord.bot.ts';
 import { token } from './config';
 import { Logger } from './utils/logger.ts';
 
-const logger = new Logger('Bot');
+const logger = new Logger({ label: 'Bot' });
 
 const discordBot = new DiscordBot(logger);
 
