@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/main.ts",
-    "start": "NODE_ENV=development bun run src/main.ts",
-    "start:prod": "NODE_ENV=production bun run src/main.ts",
+    "start": "NODE_ENV=production bun run src/main.ts",
     "format": "prettier --write ."
   },
   "devDependencies": {
