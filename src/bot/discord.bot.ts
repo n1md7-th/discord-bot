@@ -1,3 +1,4 @@
+import { type Database, SQLiteError } from 'bun:sqlite';
 import {
   ActivityType,
   Client,
@@ -10,6 +11,7 @@ import {
   type User,
 } from 'discord.js';
 import { Conversations } from '../ai/conversations.ts';
+import { ServersService } from '../db/services/servers.service.ts';
 import { Context } from '../utils/context.ts';
 import { Logger } from '../utils/logger.ts';
 import { NameMaker } from '../utils/name.maker.ts';
@@ -34,13 +36,17 @@ export class DiscordBot {
     channel: CreateHandler;
     help: CreateHandler;
   };
+  readonly serversService: ServersService;
 
   id!: string;
   tag!: string;
   slug!: string;
   username!: string;
 
-  constructor(readonly logger: Logger) {
+  constructor(
+    readonly logger: Logger,
+    readonly connection: Database,
+  ) {
     this.conversations = new Conversations();
     this.reactionCommands = new ReactionCommands(this);
     this.stringCommands = new StringCommands(this);
@@ -64,6 +70,7 @@ export class DiscordBot {
       channel: new ChannelHandler(this),
       help: new HelpHandler(this),
     };
+    this.serversService = new ServersService(connection);
 
     this.onError = this.onError.bind(this);
     this.onClientReady = this.onClientReady.bind(this);
@@ -140,6 +147,10 @@ export class DiscordBot {
   }
 
   private onError(error: Error) {
+    if (error instanceof SQLiteError) {
+      return this.logger.error('SQLite Error:', error);
+    }
+
     this.logger.error('Error:', error);
   }
 }

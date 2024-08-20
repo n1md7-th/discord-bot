@@ -5,25 +5,27 @@ export type LoggerOptions = {
 };
 
 export class Logger {
-  constructor(private readonly options: LoggerOptions) {}
-
-  info(message?: string) {
-    console.log(...this.template('info', this.nullishStringify(message)));
+  constructor(private readonly options: LoggerOptions) {
+    this.nullishStringify = this.nullishStringify.bind(this);
   }
 
-  warn(message?: string) {
-    console.warn(...this.template('warn', this.nullishStringify(message)));
+  info(...message: unknown[]) {
+    console.log(...this.template('info', ...message.map(this.nullishStringify)));
   }
 
-  error(message?: string, error?: unknown) {
-    console.error(...this.template('error', this.nullishStringify(message)), error);
+  warn(...message: unknown[]) {
+    console.warn(...this.template('warn', ...message.map(this.nullishStringify)));
   }
 
-  debug(message?: string) {
-    console.debug(...this.template('debug', this.nullishStringify(message)));
+  error(message?: unknown, ...error: unknown[]) {
+    console.error(...this.template('error', this.nullishStringify(message)), ...error);
   }
 
-  private template(level: string, message: string) {
+  debug(...message: unknown[]) {
+    console.debug(...this.template('debug', ...message.map(this.nullishStringify)));
+  }
+
+  private template(level: string, ...message: string[]) {
     return [
       [
         `[${new Date().toISOString()}]`,
@@ -32,7 +34,7 @@ export class Logger {
         `[CHA:${this.options.channelId ?? '<EMPTY>'}]`,
         `[${this.options.label}]`,
       ].join(''),
-      message,
+      ...message,
     ];
   }
 
