@@ -38,6 +38,11 @@ export class Conversations {
     return this.openAiConversationFactory.createTechBroBy(conversationId);
   }
 
+  createClarifyBy(conversationId: string, context: Context) {
+    context.logger.info(`Creating Clarify conversation for ${conversationId}`);
+    return this.openAiConversationFactory.createClarifyBy(conversationId);
+  }
+
   private getInstanceBy(conversation: ConversationsEntity): Conversation {
     if (conversation.strategy === StrategyEnum.OpenAI) {
       return new OpenAiStrategy(conversation.id, this.bot.conversationRepository, this.bot.messagesRepository);

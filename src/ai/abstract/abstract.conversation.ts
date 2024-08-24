@@ -18,4 +18,8 @@ export abstract class Conversation {
   abstract sendRequest(context: Context, maxChunkSize?: number): Promise<AiResponse>;
 
   protected abstract addMessageBy(role: RoleEnum, content: string): this;
+
+  addUserAttachment(url: string): this {
+    throw new Error('Method:addUserAttachment not implemented.');
+  }
 }

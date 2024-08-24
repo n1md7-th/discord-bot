@@ -1,6 +1,7 @@
 export enum TemplateEnum {
   Grammarly = 'Grammarly',
   TechBro = 'TechBro',
+  Clarify = 'Clarify',
 }
 
 export enum StrategyEnum {

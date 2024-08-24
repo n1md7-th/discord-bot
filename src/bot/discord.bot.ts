@@ -4,13 +4,14 @@ import {
   Client,
   Events,
   GatewayIntentBits,
-  MessageReaction,
   type Message,
+  MessageReaction,
   type PartialMessageReaction,
   type PartialUser,
   type User,
 } from 'discord.js';
 import { Conversations } from '../ai/conversations.ts';
+import { ConversationsRepository } from '../db/repositories/conversations.repository.ts';
 import { MessagesRepository } from '../db/repositories/messages.repository.ts';
 import { Context } from '../utils/context.ts';
 import { Logger } from '../utils/logger.ts';
@@ -21,7 +22,6 @@ import { StringCommands } from './commands/string.commands.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
 import { HelpHandler } from './handlers/message-create/help.handler.ts';
 import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
-import { ConversationsRepository } from '../db/repositories/conversations.repository.ts';
 
 export class DiscordBot {
   readonly messageLimit = 2000;

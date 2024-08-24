@@ -39,7 +39,7 @@ export class OpenAiStrategy extends Conversation {
           (message) =>
             ({
               role: message.role,
-              content: message.content,
+              content: this.getFormattedContent(message.content),
             }) as OpenAiMessage,
         ),
       });
@@ -59,6 +59,12 @@ export class OpenAiStrategy extends Conversation {
 
   override addUserMessage(content: string): this {
     this.addMessageBy(RoleEnum.User, content);
+
+    return this;
+  }
+
+  override addUserAttachment(url: string): this {
+    this.addAttachmentBy(RoleEnum.User, url);
 
     return this;
   }
@@ -92,5 +98,32 @@ export class OpenAiStrategy extends Conversation {
     });
 
     return this;
+  }
+
+  protected addAttachmentBy(role: RoleEnum, url: string): this {
+    this.conversations.increaseMessageCounter(this.conversationId);
+    this.messages.create({
+      role,
+      conversationId: this.conversationId,
+      content: JSON.stringify([
+        {
+          type: 'image_url',
+          image_url: {
+            url,
+            detail: 'low',
+          },
+        },
+      ]),
+    });
+
+    return this;
+  }
+
+  private getFormattedContent(content: string) {
+    try {
+      return JSON.parse(content);
+    } catch (e) {
+      return content;
+    }
   }
 }

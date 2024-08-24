@@ -7,4 +7,6 @@ export abstract class AbstractCreator {
   abstract createGrammarlyBy(conversationId: string): Conversation;
 
   abstract createTechBroBy(conversationId: string): Conversation;
+
+  abstract createClarifyBy(conversationId: string): Conversation;
 }

@@ -7,4 +7,5 @@ export enum StringCommand {
 export enum EmojiCommand {
   Grammarly = '📖',
   Finger = '🖕🏼',
+  Explain = '🤔',
 }
