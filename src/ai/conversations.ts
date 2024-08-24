@@ -1,58 +1,48 @@
+import type { DiscordBot } from '../bot/discord.bot.ts';
+import type { ConversationsEntity } from '../db/entities/conversation.entity.ts';
+import { StrategyEnum } from '../db/enums/conversation.enum.ts';
 import type { Context } from '../utils/context.ts';
-import { Conversation } from './abstract/abstract.conversation.ts';
+import type { Conversation } from './abstract/abstract.conversation.ts';
+import type { AbstractCreator } from './abstract/abstract.creator.ts';
+import { OpenAiConversationFactory } from './factory/open-ai-conversation.factory.ts';
 import { OpenAiStrategy } from './strategies/openai.ts';
-import { OpenAiTechBroTemplate } from './templates/openai/conversation.template.ts';
-import { OpenAiGrammarlyTemplate } from './templates/openai/grammarly.template.ts';
 
 export class Conversations {
-  private readonly conversations: Map<string, Conversation>;
+  private readonly openAiConversationFactory: AbstractCreator;
 
-  constructor() {
-    this.conversations = new Map();
+  constructor(private readonly bot: DiscordBot) {
+    this.openAiConversationFactory = new OpenAiConversationFactory(this.bot);
   }
 
-  get size() {
-    return this.conversations.size;
+  getBy(id: string, context: Context) {
+    context.logger.info(`Getting conversation by id ${id}`);
+    const entity = this.bot.conversationRepository.getByPk(id);
+
+    if (!entity) {
+      context.logger.info(`Conversation not found by id ${id}`);
+      return null;
+    }
+
+    context.logger.info(`Creating conversation by id ${id}`);
+
+    return this.getInstanceBy(entity);
   }
 
-  getBy(id: string) {
-    return this.conversations.get(id);
+  createGrammarlyBy(conversationId: string, context: Context) {
+    context.logger.info(`Creating Grammarly conversation for ${conversationId}`);
+    return this.openAiConversationFactory.createGrammarlyBy(conversationId);
   }
 
-  has(id: string) {
-    return this.conversations.has(id);
+  createTechBroBy(conversationId: string, context: Context) {
+    context.logger.info(`Creating TechBro conversation for ${conversationId}`);
+    return this.openAiConversationFactory.createTechBroBy(conversationId);
   }
 
-  deleteBy(id: string) {
-    return this.conversations.delete(id);
-  }
+  private getInstanceBy(conversation: ConversationsEntity): Conversation {
+    if (conversation.strategy === StrategyEnum.OpenAI) {
+      return new OpenAiStrategy(conversation.id, this.bot.conversationRepository, this.bot.messagesRepository);
+    }
 
-  createOpenAiGrammarlyConversationBy(id: string, context: Context) {
-    const template = new OpenAiGrammarlyTemplate();
-    const strategy = new OpenAiStrategy(template);
-
-    return this.getOrCreateBy(id, strategy, context);
-  }
-
-  createOpenAiTechBroConversationBy(id: string, context: Context) {
-    const template = new OpenAiTechBroTemplate();
-    const strategy = new OpenAiStrategy(template);
-
-    return this.getOrCreateBy(id, strategy, context);
-  }
-
-  private addBy(id: string, conversation: Conversation, context: Context) {
-    this.conversations.set(id, conversation);
-
-    context.logger.info(`Created conversation(${conversation.constructor.name}) for: ${id}`);
-
-    return conversation;
-  }
-
-  private getOrCreateBy(id: string, conversation: Conversation, context: Context) {
-    const existing = this.getBy(id);
-    if (existing) return existing;
-
-    return this.addBy(id, conversation, context);
+    throw new Error(`Unsupported strategy ${conversation.strategy}`);
   }
 }

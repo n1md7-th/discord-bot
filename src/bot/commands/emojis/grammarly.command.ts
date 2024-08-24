@@ -58,9 +58,6 @@ export class GrammarlyCommand extends ReactionCommand {
     thread: AnyThreadChannel<boolean>,
     context: Context,
   ) {
-    const conversation = this.bot.conversations.createOpenAiGrammarlyConversationBy(thread.id, context);
-    conversation.addUserMessage(reaction.message.content!);
-
-    return conversation;
+    return this.bot.conversations.createGrammarlyBy(thread.id, context).addUserMessage(reaction.message.content!);
   }
 }

@@ -11,7 +11,7 @@ import {
   type User,
 } from 'discord.js';
 import { Conversations } from '../ai/conversations.ts';
-import { ServersService } from '../db/services/servers.service.ts';
+import { MessagesRepository } from '../db/repositories/messages.repository.ts';
 import { Context } from '../utils/context.ts';
 import { Logger } from '../utils/logger.ts';
 import { NameMaker } from '../utils/name.maker.ts';
@@ -21,22 +21,30 @@ import { StringCommands } from './commands/string.commands.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
 import { HelpHandler } from './handlers/message-create/help.handler.ts';
 import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
+import { ConversationsRepository } from '../db/repositories/conversations.repository.ts';
 
 export class DiscordBot {
   readonly messageLimit = 2000;
   readonly nameMaker = new NameMaker();
+
   readonly grammarlyThreadName: Generator<string>;
   readonly techBroThreadName: Generator<string>;
+
   readonly conversations: Conversations;
+
   readonly reactionCommands: ReactionCommands;
   readonly stringCommands: StringCommands;
+
   readonly client: Client;
+
   readonly createHandlers: {
     thread: CreateHandler;
     channel: CreateHandler;
     help: CreateHandler;
   };
-  readonly serversService: ServersService;
+
+  readonly conversationRepository: ConversationsRepository;
+  readonly messagesRepository: MessagesRepository;
 
   id!: string;
   tag!: string;
@@ -47,7 +55,9 @@ export class DiscordBot {
     readonly logger: Logger,
     readonly connection: Database,
   ) {
-    this.conversations = new Conversations();
+    this.conversationRepository = new ConversationsRepository(connection);
+    this.messagesRepository = new MessagesRepository(connection);
+    this.conversations = new Conversations(this);
     this.reactionCommands = new ReactionCommands(this);
     this.stringCommands = new StringCommands(this);
     this.grammarlyThreadName = this.nameMaker.makeThreadName('Grammarly');
@@ -70,7 +80,6 @@ export class DiscordBot {
       channel: new ChannelHandler(this),
       help: new HelpHandler(this),
     };
-    this.serversService = new ServersService(connection);
 
     this.onError = this.onError.bind(this);
     this.onClientReady = this.onClientReady.bind(this);

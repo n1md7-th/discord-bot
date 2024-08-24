@@ -48,9 +48,6 @@ export class ChannelHandler extends CreateHandler {
   }
 
   private createConversation(message: Message, thread: AnyThreadChannel, context: Context) {
-    const conversation = this.bot.conversations.createOpenAiTechBroConversationBy(thread.id, context);
-    conversation.addUserMessage(message.content);
-
-    return conversation;
+    return this.bot.conversations.createTechBroBy(thread.id, context).addUserMessage(message.content);
   }
 }

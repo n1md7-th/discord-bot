@@ -20,7 +20,5 @@ export class StringCommands {
     if (message.startsWith(StringCommand.Extend)) return this.extend;
     if (message.startsWith(StringCommand.Enable)) return this.enable;
     if (message.startsWith(StringCommand.Disable)) return this.disable;
-
-    return;
   }
 }

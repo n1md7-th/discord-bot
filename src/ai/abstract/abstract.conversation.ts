@@ -1,42 +1,21 @@
+import type { RoleEnum } from '../../db/enums/message.enum.ts';
 import type { Context } from '../../utils/context.ts';
-import { Counter } from '../../utils/counter.ts';
 import { AiResponse } from '../response/ai.response.ts';
 
 export abstract class Conversation {
-  private disabled = false;
-  private readonly counter: Counter;
-  private readonly maxRequests: Counter;
+  abstract isDisabled(): boolean;
 
-  protected constructor(maxRequests: number) {
-    this.counter = new Counter(0);
-    this.maxRequests = new Counter(maxRequests);
-  }
+  abstract disable(): void;
 
-  isDisabled() {
-    return this.disabled;
-  }
+  abstract enable(): void;
 
-  enable() {
-    this.disabled = false;
-  }
+  abstract increaseRequestsBy(value: number): void;
 
-  disable() {
-    this.disabled = true;
-  }
+  abstract hasReachedLimit(): boolean;
 
-  increaseRequestsBy(value: number) {
-    this.maxRequests.add(value);
-  }
-
-  hasReachedLimit() {
-    return this.counter.getValue() >= this.maxRequests.getValue();
-  }
-
-  addUserMessage(content: string) {
-    this.counter.inc();
-
-    return this;
-  }
+  abstract addUserMessage(content: string): this;
 
   abstract sendRequest(context: Context, maxChunkSize?: number): Promise<AiResponse>;
+
+  protected abstract addMessageBy(role: RoleEnum, content: string): this;
 }
