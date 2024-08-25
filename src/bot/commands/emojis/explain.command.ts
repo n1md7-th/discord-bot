@@ -10,7 +10,7 @@ export class ExplainCommand extends ReactionCommand {
 
     if (reaction.message.author?.bot) return;
     if (!content && !attachments.size) return;
-    if (this.bot.conversations.getBy(reaction.message.id, context)) return;
+    if (this.bot.conversations.existBy(reaction.message.id)) return;
 
     await channel.sendTyping();
     await reaction.message.react('💬');

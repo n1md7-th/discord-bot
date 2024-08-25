@@ -23,6 +23,7 @@ export class OpenAiStrategy extends Conversation {
     this.openai = new OpenAI({
       apiKey: openAiApiKey,
       maxRetries: 3,
+      timeout: 15_000,
     });
   }
 
@@ -33,6 +34,7 @@ export class OpenAiStrategy extends Conversation {
    */
   async sendRequest(context: Context, maxChunkSize: number = 2000) {
     try {
+      context.logger.info('Sending request to OpenAI');
       const conversation = await this.openai.chat.completions.create({
         model: this.model,
         messages: this.messages.getManyByConversationId(this.conversationId).map(
@@ -43,6 +45,7 @@ export class OpenAiStrategy extends Conversation {
             }) as OpenAiMessage,
         ),
       });
+      context.logger.info('Request received to OpenAI');
 
       const message = conversation.choices[0].message;
 

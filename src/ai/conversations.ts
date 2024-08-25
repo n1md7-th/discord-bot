@@ -14,6 +14,10 @@ export class Conversations {
     this.openAiConversationFactory = new OpenAiConversationFactory(this.bot);
   }
 
+  existBy(id: string) {
+    return this.bot.conversationRepository.getByPk(id) !== null;
+  }
+
   getBy(id: string, context: Context) {
     context.logger.info(`Getting conversation by id ${id}`);
     const entity = this.bot.conversationRepository.getByPk(id);

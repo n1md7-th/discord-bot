@@ -1,4 +1,5 @@
 preload = [
+  "./src/scripts/verify-db.ts",
   "./src/scripts/update-user-details.ts",
   "./src/scripts/run-migration-script.ts"
 ]
