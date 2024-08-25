@@ -19,6 +19,7 @@ import { NameMaker } from '../utils/name.maker.ts';
 import { CreateHandler } from './abstract/create.handler.ts';
 import { ReactionCommands } from './commands/reaction.commands.ts';
 import { StringCommands } from './commands/string.commands.ts';
+import { BotException } from './exceptions/bot.exception.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
 import { HelpHandler } from './handlers/message-create/help.handler.ts';
 import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
@@ -93,6 +94,10 @@ export class DiscordBot {
     this.client.on(Events.Error, this.onError);
     this.client.on(Events.MessageCreate, this.onMessageCreate);
     this.client.on(Events.MessageReactionAdd, this.onMessageReactionAdd);
+    this.client.on(Events.InteractionCreate, (interaction) => {
+      this.logger.info('Interaction received:', interaction.channel?.id);
+      // TODO: Add slash commands
+    });
 
     return this;
   }
@@ -128,17 +133,24 @@ export class DiscordBot {
 
     context.logger.info(`Message received: ${message.content}`);
 
-    if (message.content.startsWith('!help')) {
-      return await this.createHandlers.help.handle(message, context);
+    try {
+      if (message.content.startsWith('!help')) {
+        return await this.createHandlers.help.handle(message, context);
+      }
+
+      if (message.channel.isThread()) {
+        if (message.content.startsWith('!skip')) return;
+
+        return await this.createHandlers.thread.handle(message, context);
+      }
+
+      return await this.createHandlers.channel.handle(message, context);
+    } catch (error) {
+      if (error instanceof BotException) {
+        await message.channel.send(error.getErrorMessage()).catch(this.logger.error);
+        this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+      }
     }
-
-    if (message.channel.isThread()) {
-      if (message.content.startsWith('!skip')) return;
-
-      return await this.createHandlers.thread.handle(message, context);
-    }
-
-    return await this.createHandlers.channel.handle(message, context);
   }
 
   private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
@@ -148,10 +160,17 @@ export class DiscordBot {
 
     context.logger.info(`Reaction added: ${reaction.emoji.name}`);
 
-    const command = this.reactionCommands.getByEmoji(reaction.emoji);
+    try {
+      const command = this.reactionCommands.getByEmoji(reaction.emoji);
 
-    if (command) {
-      await command.execute(reaction, user, context);
+      if (command) {
+        await command.execute(reaction, user, context);
+      }
+    } catch (error) {
+      if (error instanceof BotException) {
+        await reaction.message.channel.send(error.getErrorMessage()).catch(this.logger.error);
+        this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+      }
     }
   }
 

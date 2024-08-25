@@ -2,6 +2,7 @@ import { type AnyThreadChannel, type Message, ThreadAutoArchiveDuration } from '
 import type { Context } from '../../../utils/context.ts';
 import { Randomizer } from '../../../utils/randomizer.ts';
 import { CreateHandler } from '../../abstract/create.handler.ts';
+import { BotException } from '../../exceptions/bot.exception.ts';
 
 export class ChannelHandler extends CreateHandler {
   private readonly emojis = new Randomizer(['📱', '💻', '🖥️', '🦾', '👋', '👀', '🙃', '👻']);
@@ -40,11 +41,20 @@ export class ChannelHandler extends CreateHandler {
   }
 
   private async createThread(message: Message) {
-    return await message.startThread({
-      name: this.bot.techBroThreadName.next().value,
-      autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
-      reason: 'User requested a tech support',
-    });
+    return await message
+      .startThread({
+        name: this.bot.techBroThreadName.next().value,
+        autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
+        reason: 'User requested a tech support',
+      })
+      .catch((exception) => {
+        throw new BotException({
+          exception,
+          message: 'I could not create a thread here. Perhaps it is not allowed 😕',
+          channelId: message.channelId,
+          messageId: message.id,
+        });
+      });
   }
 
   private createConversation(message: Message, thread: AnyThreadChannel, context: Context) {

@@ -9,6 +9,7 @@ import {
 import type { Context } from '../../../utils/context.ts';
 import { Randomizer } from '../../../utils/randomizer.ts';
 import { ReactionCommand } from '../../abstract/reaction.command.ts';
+import { BotException } from '../../exceptions/bot.exception.ts';
 
 export class GrammarlyCommand extends ReactionCommand {
   private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);
@@ -46,11 +47,20 @@ export class GrammarlyCommand extends ReactionCommand {
   }
 
   private async createThread(reaction: MessageReaction | PartialMessageReaction) {
-    return await reaction.message.startThread({
-      name: this.bot.grammarlyThreadName.next().value,
-      autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
-      reason: 'User requested a correction',
-    });
+    return await reaction.message
+      .startThread({
+        name: this.bot.grammarlyThreadName.next().value,
+        autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
+        reason: 'User requested a correction',
+      })
+      .catch((exception) => {
+        throw new BotException({
+          exception,
+          message: 'I could not create a thread here. Perhaps it is not allowed 😕',
+          channelId: reaction.message.channelId,
+          messageId: reaction.message.id,
+        });
+      });
   }
 
   private createConversation(

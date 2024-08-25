@@ -15,6 +15,11 @@ export class Logger {
     this.nullishStringify = this.nullishStringify.bind(this);
     this.EMPTY = chalk.italic(chalk.gray('<EMPTY>'));
     this.updatedAt = Date.now();
+
+    this.info = this.info.bind(this);
+    this.warn = this.warn.bind(this);
+    this.error = this.error.bind(this);
+    this.debug = this.debug.bind(this);
   }
 
   info(...message: unknown[]) {
