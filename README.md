@@ -25,3 +25,6 @@ Just add an emoji 'Open book' to your message and the bot will respond with sugg
 
 It has the ability to provide information about the latest technologies. It can be called by mentioning the bot name and
 asking any technology-related questions.
+
+
+![help.png](images/help.png)
