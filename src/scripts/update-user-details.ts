@@ -2,6 +2,9 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { join } from 'node:path';
 import { cwd } from 'node:process';
 import { isProduction, token } from '../config';
+import { Logger } from '../utils/logger.ts';
+
+const logger = new Logger({ label: 'UserDetails' });
 
 if (isProduction) {
   const client = new Client({
@@ -9,19 +12,19 @@ if (isProduction) {
   });
 
   client.once('ready', async (client) => {
-    console.info('Setting up user details');
+    logger.info('Setting up user details');
 
     try {
       await client.user.setAvatar(join(cwd(), 'images/avatar.jpg'));
       await client.user.setBanner(join(cwd(), 'images/cover.jpeg'));
 
-      console.info('User details set up successfully');
+      logger.info('User details set up successfully');
     } catch (error) {
-      console.error('Error setting up user details:', error);
+      logger.error('Error setting up user details:', error);
     }
   });
 
   client.login(token).catch((error) => {
-    console.error('Error logging in:', error);
+    logger.error('Error logging in:', error);
   });
 }
