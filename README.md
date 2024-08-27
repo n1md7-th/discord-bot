@@ -18,7 +18,7 @@ This project was created using `bun init` in bun v1.1.24. [Bun](https://bun.sh) 
 
 ### Grammarly Bot
 
-It has typo checking capabilities. It leverages the [GPT-4o-mini](https://openai.com) model to provide suggestions for
+It has typo-checking capabilities. It leverages the [GPT-4o-mini](https://openai.com) model to provide suggestions for
 typos in the messages sent by users.
 
 Just add an emoji 'Open book' to your message and the bot will respond with suggestions for typos.
