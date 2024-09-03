@@ -1,11 +1,16 @@
-export enum StringCommand {
+export enum StringCommandEnum {
   Extend = '!extend',
   Enable = '!enable',
   Disable = '!disable',
 }
 
-export enum EmojiCommand {
+export enum EmojiCommandEnum {
   Grammarly = '📖',
   Finger = '🖕🏼',
   Explain = '🤔',
+}
+
+export enum SlashCommandEnum {
+  Help = 'help',
+  Ping = 'ping',
 }

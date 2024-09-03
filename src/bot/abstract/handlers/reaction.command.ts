@@ -1,8 +1,8 @@
 import { MessageReaction, type PartialMessageReaction, type PartialUser, type User } from 'discord.js';
-import type { Context } from '../../utils/context.ts';
-import { DiscordBot } from '../discord.bot.ts';
+import type { Context } from '../../../utils/context.ts';
+import { DiscordBot } from '../../discord.bot.ts';
 
-export abstract class ReactionCommand {
+export abstract class ReactionCommandHandler {
   constructor(protected readonly bot: DiscordBot) {}
 
   abstract execute(

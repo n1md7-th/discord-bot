@@ -38,7 +38,7 @@ export class Logger {
     console.debug(...this.template('debug', ...message.map(this.nullishStringify)));
   }
 
-  private template(level: string, ...message: string[]) {
+  private template(level: string, ...message: unknown[]) {
     return [
       [
         `[${this.getFormattedDate()}]`,
@@ -58,7 +58,7 @@ export class Logger {
 
     if (value === '') return '<EMPTY>';
 
-    return String(value);
+    return value;
   }
 
   private getDelta() {

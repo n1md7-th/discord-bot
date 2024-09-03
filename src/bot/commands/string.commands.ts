@@ -1,14 +1,14 @@
-import type { MessageCommand } from '../abstract/message.command.ts';
+import type { MessageCommandHandler } from '../abstract/handlers/message.command.ts';
 import { DiscordBot } from '../discord.bot.ts';
-import { StringCommand } from '../enums/command.enum.ts';
+import { StringCommandEnum } from '../enums/command.enum.ts';
 import { DisableCommand } from './string/disable.command.ts';
 import { EnableCommand } from './string/enable.command.ts';
 import { ExtendCommand } from './string/extend.command.ts';
 
 export class StringCommands {
-  private readonly extend: MessageCommand;
-  private readonly enable: MessageCommand;
-  private readonly disable: MessageCommand;
+  private readonly extend: MessageCommandHandler;
+  private readonly enable: MessageCommandHandler;
+  private readonly disable: MessageCommandHandler;
 
   constructor(bot: DiscordBot) {
     this.extend = new ExtendCommand(bot);
@@ -17,8 +17,8 @@ export class StringCommands {
   }
 
   getByMessage(message: string) {
-    if (message.startsWith(StringCommand.Extend)) return this.extend;
-    if (message.startsWith(StringCommand.Enable)) return this.enable;
-    if (message.startsWith(StringCommand.Disable)) return this.disable;
+    if (message.startsWith(StringCommandEnum.Extend)) return this.extend;
+    if (message.startsWith(StringCommandEnum.Enable)) return this.enable;
+    if (message.startsWith(StringCommandEnum.Disable)) return this.disable;
   }
 }

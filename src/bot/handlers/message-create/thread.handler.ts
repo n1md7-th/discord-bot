@@ -1,6 +1,6 @@
 import type { Message } from 'discord.js';
 import type { Context } from '../../../utils/context.ts';
-import { CreateHandler } from '../../abstract/create.handler.ts';
+import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 
 export class ThreadHandler extends CreateHandler {
   private readonly thresholdReachedMessage = "I'm sorry, that is too many messages for this conversation.";

@@ -1,4 +1,12 @@
-import type { Message, MessageReaction, PartialMessageReaction, PartialUser, User } from 'discord.js';
+import type {
+  CacheType,
+  Interaction,
+  Message,
+  MessageReaction,
+  PartialMessageReaction,
+  PartialUser,
+  User,
+} from 'discord.js';
 import { Logger, type LoggerOptions } from './logger.ts';
 
 export class Context {
@@ -25,6 +33,14 @@ export class Context {
       messageId: reaction.message.id,
       channelId: reaction.message.channel.id,
       label: user.username || '<Unknown User>',
+    });
+  }
+
+  static fromInteraction(interaction: Interaction<CacheType>) {
+    return new Context({
+      messageId: interaction.id,
+      channelId: interaction.channel?.id || '<Unknown Channel>',
+      label: interaction.user.username || '<Unknown User>',
     });
   }
 }

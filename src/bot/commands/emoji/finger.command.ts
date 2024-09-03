@@ -1,9 +1,9 @@
 import { MessageReaction, type PartialMessageReaction, type PartialUser, type User } from 'discord.js';
 import type { Context } from '../../../utils/context.ts';
 import { Randomizer } from '../../../utils/randomizer.ts';
-import { ReactionCommand } from '../../abstract/reaction.command.ts';
+import { ReactionCommandHandler } from '../../abstract/handlers/reaction.command.ts';
 
-export class FingerCommand extends ReactionCommand {
+export class FingerCommand extends ReactionCommandHandler {
   private readonly emojis = new Randomizer(['🖕', '🤬', '🤨', '😤', '😡', '😠', '😖']);
 
   async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, context: Context) {

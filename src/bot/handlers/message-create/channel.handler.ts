@@ -1,7 +1,7 @@
 import { type AnyThreadChannel, type Message, ThreadAutoArchiveDuration } from 'discord.js';
 import type { Context } from '../../../utils/context.ts';
 import { Randomizer } from '../../../utils/randomizer.ts';
-import { CreateHandler } from '../../abstract/create.handler.ts';
+import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 import { BotException } from '../../exceptions/bot.exception.ts';
 
 export class ChannelHandler extends CreateHandler {

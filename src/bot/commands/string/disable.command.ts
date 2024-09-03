@@ -1,9 +1,9 @@
 import type { Message } from 'discord.js';
 import type { Context } from '../../../utils/context.ts';
-import { MessageCommand } from '../../abstract/message.command.ts';
-import { StringCommand } from '../../enums/command.enum.ts';
+import { MessageCommandHandler } from '../../abstract/handlers/message.command.ts';
+import { StringCommandEnum } from '../../enums/command.enum.ts';
 
-export class DisableCommand extends MessageCommand {
+export class DisableCommand extends MessageCommandHandler {
   async execute(message: Message<boolean>, context: Context) {
     this.bot.logger.info('!Disable command invoked');
 
@@ -17,6 +17,6 @@ export class DisableCommand extends MessageCommand {
   }
 
   override removeCommandPrefix(message: string): string {
-    return message.replace(StringCommand.Disable, '').trim();
+    return message.replace(StringCommandEnum.Disable, '').trim();
   }
 }

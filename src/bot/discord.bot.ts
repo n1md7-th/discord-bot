@@ -1,9 +1,11 @@
 import { type Database, SQLiteError } from 'bun:sqlite';
 import {
   ActivityType,
+  type CacheType,
   Client,
   Events,
   GatewayIntentBits,
+  type Interaction,
   type Message,
   MessageReaction,
   type PartialMessageReaction,
@@ -16,8 +18,9 @@ import { MessagesRepository } from '../db/repositories/messages.repository.ts';
 import { Context } from '../utils/context.ts';
 import { Logger } from '../utils/logger.ts';
 import { NameMaker } from '../utils/name.maker.ts';
-import { CreateHandler } from './abstract/create.handler.ts';
+import { CreateHandler } from './abstract/handlers/create.handler.ts';
 import { ReactionCommands } from './commands/reaction.commands.ts';
+import { SlashCommands } from './commands/slash.commands.ts';
 import { StringCommands } from './commands/string.commands.ts';
 import { BotException } from './exceptions/bot.exception.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
@@ -35,6 +38,7 @@ export class DiscordBot {
 
   readonly reactionCommands: ReactionCommands;
   readonly stringCommands: StringCommands;
+  readonly slashCommands: SlashCommands;
 
   readonly client: Client;
 
@@ -61,6 +65,7 @@ export class DiscordBot {
     this.conversations = new Conversations(this);
     this.reactionCommands = new ReactionCommands(this);
     this.stringCommands = new StringCommands(this);
+    this.slashCommands = new SlashCommands(this);
     this.grammarlyThreadName = this.nameMaker.makeThreadName('Grammarly');
     this.techBroThreadName = this.nameMaker.makeThreadName('Tech Bro');
     this.client = new Client({
@@ -85,6 +90,7 @@ export class DiscordBot {
     this.onError = this.onError.bind(this);
     this.onClientReady = this.onClientReady.bind(this);
     this.onMessageCreate = this.onMessageCreate.bind(this);
+    this.onInteractionCreate = this.onInteractionCreate.bind(this);
     this.onMessageReactionAdd = this.onMessageReactionAdd.bind(this);
   }
 
@@ -94,10 +100,7 @@ export class DiscordBot {
     this.client.on(Events.Error, this.onError);
     this.client.on(Events.MessageCreate, this.onMessageCreate);
     this.client.on(Events.MessageReactionAdd, this.onMessageReactionAdd);
-    this.client.on(Events.InteractionCreate, (interaction) => {
-      this.logger.info('Interaction received:', interaction.channel?.id);
-      // TODO: Add slash commands
-    });
+    this.client.on(Events.InteractionCreate, this.onInteractionCreate);
 
     return this;
   }
@@ -170,6 +173,34 @@ export class DiscordBot {
       if (error instanceof BotException) {
         await reaction.message.channel.send(error.getErrorMessage()).catch(this.logger.error);
         this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+      }
+    }
+  }
+
+  private async onInteractionCreate(interaction: Interaction<CacheType>) {
+    if (!interaction.isChatInputCommand()) return;
+
+    const command = this.slashCommands.getByName(interaction.commandName);
+    if (!command) return;
+
+    const context = Context.fromInteraction(interaction);
+
+    context.logger.info(`Slash command received: ${interaction.commandName}`);
+
+    try {
+      await command.execute(interaction, context);
+    } catch (error) {
+      context.logger.error('Slash command error:', error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: 'There was an error while executing this command!',
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: 'There was an error while executing this command!',
+          ephemeral: true,
+        });
       }
     }
   }

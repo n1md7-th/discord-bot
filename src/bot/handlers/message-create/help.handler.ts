@@ -1,6 +1,6 @@
 import { EmbedBuilder, type Message } from 'discord.js';
 import type { Context } from '../../../utils/context.ts';
-import { CreateHandler } from '../../abstract/create.handler.ts';
+import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 import { version } from '../../../../package.json';
 
 export class HelpHandler extends CreateHandler {
