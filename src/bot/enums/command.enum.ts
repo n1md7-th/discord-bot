@@ -13,4 +13,6 @@ export enum EmojiCommandEnum {
 export enum SlashCommandEnum {
   Help = 'help',
   Ping = 'ping',
+  IP = 'ip',
+  PM2 = 'pm2',
 }
