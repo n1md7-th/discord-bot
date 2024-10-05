@@ -11,23 +11,7 @@ export class ChannelHandler extends CreateHandler {
     context.logger.info('Channel handler invoked');
 
     if (this.isBotMentioned(message)) {
-      context.logger.info('Bot mentioned in the message');
-
-      await message.react(this.emojis.getRandom());
-      await message.react(this.emojis.getRandom());
-      await message.react(this.emojis.getRandom());
-
-      const thread = await this.createThread(message);
-      const conversation = this.createConversation(message, thread, context);
-      const response = await conversation.sendRequest(context, this.bot.messageLimit);
-
-      context.logger.info(
-        `ResponseSize: ${response.size}. Limit: ${this.bot.messageLimit}. Chunks: ${response.chunks.length}.`,
-      );
-
-      for (const message of response.chunks) {
-        await thread.send(message);
-      }
+      await this.handleBotMention(message, context);
     }
 
     context.logger.info('Channel handler executed');
@@ -38,6 +22,26 @@ export class ChannelHandler extends CreateHandler {
     const isMentionedTwo = message.content.startsWith(this.bot.slug);
 
     return isMentionedOne || isMentionedTwo;
+  }
+
+  private async handleBotMention(message: Message, context: Context) {
+    context.logger.info('Bot mentioned in the message');
+
+    await message.react(this.emojis.getRandom());
+    await message.react(this.emojis.getRandom());
+    await message.react(this.emojis.getRandom());
+
+    const thread = await this.createThread(message);
+    const conversation = this.createConversation(message, thread, context);
+    const response = await conversation.sendRequest(context, this.bot.messageLimit);
+
+    context.logger.info(
+      `ResponseSize: ${response.size}. Limit: ${this.bot.messageLimit}. Chunks: ${response.chunks.length}.`,
+    );
+
+    for (const message of response.chunks) {
+      await thread.send(message);
+    }
   }
 
   private async createThread(message: Message) {

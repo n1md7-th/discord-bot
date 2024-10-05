@@ -23,6 +23,7 @@ import { ReactionCommands } from './commands/reaction.commands.ts';
 import { SlashCommands } from './commands/slash.commands.ts';
 import { StringCommands } from './commands/string.commands.ts';
 import { BotException } from './exceptions/bot.exception.ts';
+import { UrlAnalyzer } from './handlers/analyzers/url.analyzer.ts';
 import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
 import { HelpHandler } from './handlers/message-create/help.handler.ts';
 import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
@@ -42,10 +43,11 @@ export class DiscordBot {
 
   readonly client: Client;
 
-  readonly createHandlers: {
+  readonly handlers: {
     thread: CreateHandler;
     channel: CreateHandler;
     help: CreateHandler;
+    urlSanitizer: CreateHandler;
   };
 
   readonly conversationRepository: ConversationsRepository;
@@ -81,10 +83,11 @@ export class DiscordBot {
         GatewayIntentBits.GuildEmojisAndStickers,
       ],
     });
-    this.createHandlers = {
+    this.handlers = {
       thread: new ThreadHandler(this),
       channel: new ChannelHandler(this),
       help: new HelpHandler(this),
+      urlSanitizer: new UrlAnalyzer(this),
     };
 
     this.onError = this.onError.bind(this);
@@ -137,17 +140,19 @@ export class DiscordBot {
     context.logger.info(`Message received: ${message.content}`);
 
     try {
+      await this.handlers.urlSanitizer.handle(message, context);
+
       if (message.content.startsWith('!help')) {
-        return await this.createHandlers.help.handle(message, context);
+        return await this.handlers.help.handle(message, context);
       }
 
       if (message.channel.isThread()) {
         if (message.content.startsWith('!skip')) return;
 
-        return await this.createHandlers.thread.handle(message, context);
+        return await this.handlers.thread.handle(message, context);
       }
 
-      return await this.createHandlers.channel.handle(message, context);
+      return await this.handlers.channel.handle(message, context);
     } catch (error) {
       if (error instanceof BotException) {
         await message.channel.send(error.getErrorMessage()).catch(this.logger.error);
