@@ -27,10 +27,11 @@ export class UrlAnalyzer extends CreateHandler {
       if (sanitizedSocialMediaUrls.length === 0) return;
 
       const s = sanitizedSocialMediaUrls.length > 1 ? 's' : '';
+      const is = sanitizedSocialMediaUrls.length > 1 ? 'are' : 'is';
 
       await message.reply(
         `I've noticed social media URLs with tracking parameters ${this.emojis.getRandom()}.` +
-          ` Here are the sanitized version${s}: ${sanitizedSocialMediaUrls.join(', ')}`,
+          ` Here ${is} the sanitized version${s}: ${sanitizedSocialMediaUrls.join(', ')}`,
       );
 
       context.logger.info('Url analyzer cleaned up the urls');
