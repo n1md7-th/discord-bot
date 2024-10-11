@@ -13,16 +13,16 @@ export class UrlAnalyzer extends CreateHandler {
       const extractedUrls = this.extractUrls(message);
       if (!extractedUrls) return;
 
-      const sanitizedSocialMediaUrls = extractedUrls.reduce<string[]>((acc, url) => {
-        if (this.isSocialMediaUrl(url)) {
-          const sanitizedUrl = this.removeTracker(url);
-          if (sanitizedUrl !== url) {
-            acc.push(sanitizedUrl);
-          }
-        }
+      const sanitizedSocialMediaUrls = [];
+      for (const originalExtractedUrl of extractedUrls) {
+        const targetUrl = await this.getRedirectionUrl(originalExtractedUrl);
+        if (!this.isSocialMediaUrl(targetUrl)) continue;
 
-        return acc;
-      }, []);
+        const sanitizedUrl = this.removeTracker(targetUrl);
+        if (sanitizedUrl !== originalExtractedUrl) {
+          sanitizedSocialMediaUrls.push(sanitizedUrl);
+        }
+      }
 
       if (sanitizedSocialMediaUrls.length === 0) return;
 
@@ -77,6 +77,15 @@ export class UrlAnalyzer extends CreateHandler {
     return /youtube.com|youtu.be/.test(url);
   }
 
+  private async getRedirectionUrl(url: string) {
+    const response = await fetch(url, { redirect: 'manual' });
+
+    const hasRedirection = [301, 302, 303].includes(response.status);
+    if (hasRedirection) return response.headers.get('location')!;
+
+    return url;
+  }
+
   private removeTracker(url: string) {
     const urlObject = new URL(url);
 
@@ -96,6 +105,8 @@ export class UrlAnalyzer extends CreateHandler {
         urlObject.searchParams.delete('ref');
         break;
       case this.isTiKTokUrl(url):
+        urlObject.searchParams.delete('_t');
+        urlObject.searchParams.delete('_r');
         urlObject.searchParams.delete('is_copy_url');
         urlObject.searchParams.delete('is_from_webapp');
         urlObject.searchParams.delete('sender_device');
