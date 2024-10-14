@@ -94,6 +94,8 @@ export class UrlAnalyzer extends CreateHandler {
         urlObject.searchParams.delete('fbclid');
         urlObject.searchParams.delete('mibextid');
         urlObject.searchParams.delete('mib');
+        urlObject.searchParams.delete('rdid');
+        urlObject.searchParams.delete('share_url');
         break;
       case this.isInstagramUrl(url):
         urlObject.searchParams.delete('igshid');
