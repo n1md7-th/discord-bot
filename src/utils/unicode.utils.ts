@@ -48,8 +48,12 @@ export class UnicodeUtils {
     return '<KA->EN> ' + content.split('').map(this.toEnglish).join('');
   }
 
-  private needsTranslation([letter]: string) {
-    return this.map.has(letter);
+  private needsTranslation(letter: string) {
+    for (let i = 0; i < Math.min(32, letter.length); i++) {
+      if (this.map.has(letter[i])) return true;
+    }
+
+    return false;
   }
 
   private toEnglish([letter]: string) {
