@@ -3,6 +3,7 @@ import type {
   Interaction,
   Message,
   MessageReaction,
+  PartialMessage,
   PartialMessageReaction,
   PartialUser,
   User,
@@ -20,11 +21,11 @@ export class Context {
     this.channelId = options.channelId;
   }
 
-  static fromMessage(message: Message) {
+  static fromMessage(message: Message<boolean> | PartialMessage) {
     return new Context({
       messageId: message.id,
       channelId: message.channel.id,
-      label: message.author.username,
+      label: message.author?.username || '<Unknown User>',
     });
   }
 

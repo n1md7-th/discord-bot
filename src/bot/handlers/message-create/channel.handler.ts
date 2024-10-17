@@ -8,13 +8,9 @@ export class ChannelHandler extends CreateHandler {
   private readonly emojis = new Randomizer(['📱', '💻', '🖥️', '🦾', '👋', '👀', '🙃', '👻']);
 
   async handle(message: Message, context: Context) {
-    context.logger.info('Channel handler invoked');
-
     if (this.isBotMentioned(message)) {
       await this.handleBotMention(message, context);
     }
-
-    context.logger.info('Channel handler executed');
   }
 
   private isBotMentioned(message: Message) {

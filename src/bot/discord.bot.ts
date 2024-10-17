@@ -1,13 +1,14 @@
 import { type Database, SQLiteError } from 'bun:sqlite';
 import {
   ActivityType,
-  type CacheType,
   Client,
   Events,
   GatewayIntentBits,
+  MessageReaction,
+  type CacheType,
   type Interaction,
   type Message,
-  MessageReaction,
+  type PartialMessage,
   type PartialMessageReaction,
   type PartialUser,
   type User,
@@ -18,6 +19,7 @@ import { MessagesRepository } from '../db/repositories/messages.repository.ts';
 import { Context } from '../utils/context.ts';
 import { Logger } from '../utils/logger.ts';
 import { NameMaker } from '../utils/name.maker.ts';
+import { UnicodeUtils } from '../utils/unicode.utils.ts';
 import { CreateHandler } from './abstract/handlers/create.handler.ts';
 import { ReactionCommands } from './commands/reaction.commands.ts';
 import { SlashCommands } from './commands/slash.commands.ts';
@@ -58,6 +60,8 @@ export class DiscordBot {
   slug!: string;
   username!: string;
 
+  readonly unicodeUtils: UnicodeUtils;
+
   constructor(
     readonly logger: Logger,
     readonly connection: Database,
@@ -89,10 +93,13 @@ export class DiscordBot {
       help: new HelpHandler(this),
       urlSanitizer: new UrlAnalyzer(this),
     };
+    this.unicodeUtils = new UnicodeUtils();
 
     this.onError = this.onError.bind(this);
     this.onClientReady = this.onClientReady.bind(this);
     this.onMessageCreate = this.onMessageCreate.bind(this);
+    this.onMessageUpdate = this.onMessageUpdate.bind(this);
+    this.onMessageDelete = this.onMessageDelete.bind(this);
     this.onInteractionCreate = this.onInteractionCreate.bind(this);
     this.onMessageReactionAdd = this.onMessageReactionAdd.bind(this);
   }
@@ -104,6 +111,8 @@ export class DiscordBot {
     this.client.on(Events.MessageCreate, this.onMessageCreate);
     this.client.on(Events.MessageReactionAdd, this.onMessageReactionAdd);
     this.client.on(Events.InteractionCreate, this.onInteractionCreate);
+    this.client.on(Events.MessageUpdate, this.onMessageUpdate);
+    this.client.on(Events.MessageDelete, this.onMessageDelete);
 
     return this;
   }
@@ -137,7 +146,7 @@ export class DiscordBot {
 
     const context = Context.fromMessage(message);
 
-    context.logger.info(`Message received: ${message.content}`);
+    context.logger.info(`Message received: ${this.unicodeUtils.toAscii(message.content)}`);
 
     try {
       await this.handlers.urlSanitizer.handle(message, context);
@@ -159,6 +168,25 @@ export class DiscordBot {
         this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
       }
     }
+  }
+
+  private onMessageUpdate(
+    oldMessage: Message<boolean> | PartialMessage,
+    newMessage: Message<boolean> | PartialMessage,
+  ) {
+    if (oldMessage.author?.bot) return;
+
+    const context = Context.fromMessage(newMessage);
+
+    context.logger.info(`Message updated: ${this.unicodeUtils.toAscii(newMessage.content)}`);
+  }
+
+  private onMessageDelete(message: Message<boolean> | PartialMessage) {
+    if (message.author?.bot) return;
+
+    const context = Context.fromMessage(message);
+
+    context.logger.info(`Message deleted: ${this.unicodeUtils.toAscii(message.content)}`);
   }
 
   private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
