@@ -147,6 +147,9 @@ export class DiscordBot {
     const context = Context.fromMessage(message);
 
     context.logger.info(`Message received: ${this.unicodeUtils.toAscii(message.content)}`);
+    if (message.attachments.size) {
+      context.logger.info(`With Attachments of ${message.attachments.size}`);
+    }
 
     try {
       await this.handlers.urlSanitizer.handle(message, context);
