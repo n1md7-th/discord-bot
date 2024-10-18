@@ -24,7 +24,16 @@
     "noPropertyAccessFromIndexSignature": true,
 
     "experimentalDecorators": true,
+    "noImplicitOverride": true,
 
-    "noImplicitOverride": true
+    "paths": {
+      "@ai/*": ["./src/ai/*"],
+      "@db/*": ["./src/db/*"],
+      "@bot/*": ["./src/bot/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@config/*": ["./src/config/*"],
+      "@scripts/*": ["./src/scripts/*"],
+      "@services/*": ["./src/services/*"],
+    }
   }
 }

@@ -13,22 +13,22 @@ import {
   type PartialUser,
   type User,
 } from 'discord.js';
-import { Conversations } from '../ai/conversations.ts';
-import { ConversationsRepository } from '../db/repositories/conversations.repository.ts';
-import { MessagesRepository } from '../db/repositories/messages.repository.ts';
-import { Context } from '../utils/context.ts';
-import { Logger } from '../utils/logger.ts';
-import { NameMaker } from '../utils/name.maker.ts';
-import { UnicodeUtils } from '../utils/unicode.utils.ts';
-import { CreateHandler } from './abstract/handlers/create.handler.ts';
-import { ReactionCommands } from './commands/reaction.commands.ts';
-import { SlashCommands } from './commands/slash.commands.ts';
-import { StringCommands } from './commands/string.commands.ts';
-import { BotException } from './exceptions/bot.exception.ts';
-import { UrlAnalyzer } from './handlers/analyzers/url.analyzer.ts';
-import { ChannelHandler } from './handlers/message-create/channel.handler.ts';
-import { HelpHandler } from './handlers/message-create/help.handler.ts';
-import { ThreadHandler } from './handlers/message-create/thread.handler.ts';
+import { Conversations } from '@ai/conversations.ts';
+import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
+import { MessagesRepository } from '@db/repositories/messages.repository.ts';
+import { Context } from '@utils/context.ts';
+import { Logger } from '@utils/logger.ts';
+import { NameMaker } from '@utils/name.maker.ts';
+import { UnicodeUtils } from '@utils/unicode.utils.ts';
+import { CreateHandler } from '@bot/abstract/handlers/create.handler.ts';
+import { ReactionCommands } from '@bot/commands/reaction.commands.ts';
+import { SlashCommands } from '@bot/commands/slash.commands.ts';
+import { StringCommands } from '@bot/commands/string.commands.ts';
+import { BotException } from '@bot/exceptions/bot.exception.ts';
+import { UrlAnalyzer } from '@bot/handlers/analyzers/url.analyzer.ts';
+import { ChannelHandler } from '@bot/handlers/message-create/channel.handler.ts';
+import { HelpHandler } from '@bot/handlers/message-create/help.handler.ts';
+import { ThreadHandler } from '@bot/handlers/message-create/thread.handler.ts';
 
 export class DiscordBot {
   readonly messageLimit = 2000;
@@ -85,6 +85,7 @@ export class DiscordBot {
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.DirectMessageReactions,
         GatewayIntentBits.GuildEmojisAndStickers,
+        GatewayIntentBits.GuildWebhooks,
       ],
     });
     this.handlers = {
@@ -167,8 +168,7 @@ export class DiscordBot {
       return await this.handlers.channel.handle(message, context);
     } catch (error) {
       if (error instanceof BotException) {
-        await message.channel.send(error.getErrorMessage()).catch(this.logger.error);
-        this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+        await this.notifyChannel(message, error);
       }
     }
   }
@@ -207,8 +207,7 @@ export class DiscordBot {
       }
     } catch (error) {
       if (error instanceof BotException) {
-        await reaction.message.channel.send(error.getErrorMessage()).catch(this.logger.error);
-        this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+        await this.notifyChannel(reaction.message, error);
       }
     }
   }
@@ -239,6 +238,15 @@ export class DiscordBot {
         });
       }
     }
+  }
+
+  private async notifyChannel(message: Message<boolean> | PartialMessage, error: BotException) {
+    await this.client.channels.fetch(message.channelId).then(async (channel) => {
+      if (channel?.isSendable()) {
+        this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+        await channel.send(error.getErrorMessage()).catch(this.logger.error);
+      }
+    });
   }
 
   private onError(error: Error) {

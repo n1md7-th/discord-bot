@@ -1,42 +1,77 @@
 import { type Message } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
-import { Randomizer } from '../../../utils/randomizer.ts';
-import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
+import type { Context } from '@utils/context.ts';
+import { WebhookService } from '@services/webhook.ts';
+import { CreateHandler } from '@bot/abstract/handlers/create.handler.ts';
+
+type SanitizedUrl = {
+  original: string;
+  sanitized: string;
+};
 
 export class UrlAnalyzer extends CreateHandler {
-  private readonly emojis = new Randomizer(['👻', '👀', '🙃', '🦾', '🖥️', '💻', '📱']);
+  private readonly webhook = new WebhookService();
 
   async handle(message: Message, context: Context): Promise<void> {
-    if (this.hasUrl(message)) {
-      context.logger.info('Url analyzer invoked');
+    if (!this.hasUrl(message)) return;
 
-      const extractedUrls = this.extractUrls(message);
-      if (!extractedUrls) return;
+    context.logger.info('Url analyzer invoked');
 
-      const sanitizedSocialMediaUrls = [];
-      for (const originalExtractedUrl of extractedUrls) {
-        const targetUrl = await this.getRedirectionUrl(originalExtractedUrl);
-        if (!this.isSocialMediaUrl(targetUrl)) continue;
+    await message.react('👀');
 
-        const sanitizedUrl = this.removeTracker(targetUrl);
-        if (sanitizedUrl !== originalExtractedUrl) {
-          sanitizedSocialMediaUrls.push(sanitizedUrl);
-        }
+    const extractedUrls = this.extractUrls(message);
+    if (!extractedUrls) return;
+
+    const sanitizedUrls = await this.sanitizeUrls(extractedUrls);
+
+    if (sanitizedUrls.length === 0) return;
+
+    if (!message.deletable) return context.logger.warn('No permission. Skipping the deletion of the message.');
+
+    const sanitizedContent = this.replaceTextWithSanitizedUrl(message.content, sanitizedUrls);
+
+    await this.replayAsUser(message, sanitizedContent, context).catch((error) => {
+      context.logger.error('Failed to replay as webhook user', error);
+
+      return this.replayAsBot(message, sanitizedContent);
+    });
+
+    await message.delete();
+
+    context.logger.info('Url analyzer cleaned up the urls');
+    context.logger.info('Url analyzer executed');
+  }
+
+  private async replayAsUser(message: Message, content: string, context: Context) {
+    const webhook = await this.webhook.getHookBy(message, context);
+    await webhook.send(content);
+  }
+
+  private async replayAsBot(message: Message, content: string) {
+    return await message.reply(content);
+  }
+
+  private async sanitizeUrls(extractedUrls: string[]) {
+    const sanitizedSocialMediaUrls: SanitizedUrl[] = [];
+
+    for (const originalExtractedUrl of extractedUrls) {
+      const targetUrl = await this.getRedirectionUrl(originalExtractedUrl);
+      if (!this.isSocialMediaUrl(targetUrl)) continue;
+
+      const sanitizedUrl = this.removeTracker(targetUrl);
+      if (sanitizedUrl !== originalExtractedUrl) {
+        sanitizedSocialMediaUrls.push({ sanitized: sanitizedUrl, original: originalExtractedUrl });
       }
-
-      if (sanitizedSocialMediaUrls.length === 0) return;
-
-      const s = sanitizedSocialMediaUrls.length > 1 ? 's' : '';
-      const is = sanitizedSocialMediaUrls.length > 1 ? 'are' : 'is';
-
-      await message.reply(
-        `I've noticed social media URLs with tracking parameters ${this.emojis.getRandom()}.` +
-          ` Here ${is} the sanitized version${s}: ${sanitizedSocialMediaUrls.join(', ')}`,
-      );
-
-      context.logger.info('Url analyzer cleaned up the urls');
-      context.logger.info('Url analyzer executed');
     }
+
+    return sanitizedSocialMediaUrls;
+  }
+
+  private replaceTextWithSanitizedUrl(text: string, urls: SanitizedUrl[]) {
+    for (const { original, sanitized } of urls) {
+      text = text.replace(original, sanitized);
+    }
+
+    return text;
   }
 
   private hasUrl(message: Message) {

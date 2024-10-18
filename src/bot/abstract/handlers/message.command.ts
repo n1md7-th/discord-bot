@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
-import { DiscordBot } from '../../discord.bot.ts';
+import type { Context } from '@utils/context.ts';
+import { DiscordBot } from '@bot/discord.bot.ts';
 
 export abstract class MessageCommandHandler {
   constructor(protected readonly bot: DiscordBot) {}

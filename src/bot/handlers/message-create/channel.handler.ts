@@ -1,8 +1,8 @@
 import { type AnyThreadChannel, type Message, ThreadAutoArchiveDuration } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
-import { Randomizer } from '../../../utils/randomizer.ts';
-import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
-import { BotException } from '../../exceptions/bot.exception.ts';
+import type { Context } from '@utils/context.ts';
+import { Randomizer } from '@utils/randomizer.ts';
+import { CreateHandler } from '@bot/abstract/handlers/create.handler.ts';
+import { BotException } from '@bot/exceptions/bot.exception.ts';
 
 export class ChannelHandler extends CreateHandler {
   private readonly emojis = new Randomizer(['📱', '💻', '🖥️', '🦾', '👋', '👀', '🙃', '👻']);

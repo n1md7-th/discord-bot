@@ -4,8 +4,8 @@ import {
   type SlashCommandBuilder,
   type SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
-import { DiscordBot } from '../../discord.bot.ts';
+import type { Context } from '@utils/context.ts';
+import { DiscordBot } from '@bot/discord.bot.ts';
 
 export abstract class SlashCommandHandler {
   constructor(protected readonly bot: DiscordBot) {}
