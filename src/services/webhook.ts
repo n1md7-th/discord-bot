@@ -5,7 +5,6 @@ import {
   type Collection,
   type Message,
   type Snowflake,
-  type User,
   type Webhook,
 } from 'discord.js';
 
@@ -17,34 +16,44 @@ export type ChannelWebhook = Channel & {
 };
 
 export class WebhookService {
-  private readonly hooks = new Map<Snowflake, Webhook>();
+  private readonly hooks: Record<Snowflake, Record<string, Webhook>> = {};
 
   async getHookBy(message: Message, context: Context): Promise<Webhook> {
     const channel = message.channel as ChannelWebhook;
-    const hookId = this.getIdBy(channel, message.author);
+
+    this.hooks[channel.url] ||= {};
+
+    const hookId = message.author.displayName;
 
     // 1st try to get the hook from the cache
-    if (this.hooks.has(hookId)) {
+    if (this.hooks[channel.url][hookId]) {
       context.logger.info(`Found a cached Webhook for ${message.author.displayName}`);
 
-      return this.hooks.get(hookId)!;
+      return this.hooks[channel.url][hookId];
     }
 
     context.logger.info(`No cached Webhook for ${message.author.displayName}`);
     context.logger.info(`Fetching Webhooks for ${channel.url}`);
 
-    await this.fetchHooks(channel).then((hooks) => {
-      return this.cacheHooksByName(hooks, channel, message.author);
-    });
+    const hooks = await this.fetchHooks(channel);
+    this.hooks[channel.url] = hooks.reduce(
+      (acc, hook) => {
+        acc[hook.name] = hook;
+
+        return acc;
+      },
+      {} as Record<string, Webhook>,
+    );
 
     // 2nd try to get the hook
-    if (this.hooks.has(hookId)) {
+    if (this.hooks[channel.url][hookId]) {
       context.logger.info(`Found a Webhook for ${message.author.displayName} after fetching`);
 
-      return this.hooks.get(hookId)!;
+      return this.hooks[channel.url][hookId];
     }
 
     context.logger.info(`Still no Webhook for ${message.author.displayName}, creating a new one...`);
+
     return await channel
       .createWebhook({
         name: message.author.displayName,
@@ -52,7 +61,7 @@ export class WebhookService {
         reason: 'Needed a cool new Webhook to impersonate the user',
       })
       .then((hook) => {
-        this.hooks.set(hookId, hook);
+        this.hooks[channel.url][hook.name] = hook;
 
         context.logger.info(`A new Webhook for ${message.author.displayName} successfully created`);
 
@@ -62,13 +71,5 @@ export class WebhookService {
 
   private async fetchHooks(channel: ChannelWebhook) {
     return (await channel.fetchWebhooks()) as Awaited<Collection<Snowflake, Webhook>>;
-  }
-
-  private cacheHooksByName(hooks: Collection<Snowflake, Webhook>, channel: ChannelWebhook, author: User) {
-    hooks.forEach((hook) => this.hooks.set(this.getIdBy(channel, author), hook));
-  }
-
-  private getIdBy(channel: ChannelWebhook, author: User) {
-    return `${channel.id}-${author.id}`;
   }
 }
