@@ -23,7 +23,7 @@ export class WebhookService {
 
     this.hooks[channel.url] ||= {};
 
-    const hookId = message.author.displayName;
+    const hookId = this.getHookId(message);
 
     // 1st try to get the hook from the cache
     if (this.hooks[channel.url][hookId]) {
@@ -56,7 +56,7 @@ export class WebhookService {
 
     return await channel
       .createWebhook({
-        name: message.author.displayName,
+        name: hookId,
         avatar: message.author.displayAvatarURL(),
         reason: 'Needed a cool new Webhook to impersonate the user',
       })
@@ -71,5 +71,9 @@ export class WebhookService {
 
   private async fetchHooks(channel: ChannelWebhook) {
     return (await channel.fetchWebhooks()) as Awaited<Collection<Snowflake, Webhook>>;
+  }
+
+  private getHookId(message: Message) {
+    return message.member?.nickname || message.author.displayName;
   }
 }
