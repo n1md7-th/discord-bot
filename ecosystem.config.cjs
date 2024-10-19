@@ -6,6 +6,9 @@ module.exports = {
       watch: false,
       version: '1.0.0',
       namespace: 'Discord',
+      env: {
+        FORCE_COLOR: true,
+      },
     },
   ],
 
