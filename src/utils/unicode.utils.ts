@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 export class UnicodeUtils {
   private readonly map = new Map([
     ['ა', 'a'],
@@ -41,11 +43,11 @@ export class UnicodeUtils {
   }
 
   toAscii(content: string | null) {
-    if (!content) return '<empty>';
+    if (!content) return chalk.grey('<EMPTY>');
 
     if (!this.needsTranslation(content)) return content;
 
-    return '<KA->EN> ' + content.split('').map(this.toEnglish).join('');
+    return chalk.blueBright('<KA->EN> ') + content.split('').map(this.toEnglish).join('');
   }
 
   private needsTranslation(letter: string) {

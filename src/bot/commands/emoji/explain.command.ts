@@ -4,7 +4,7 @@ import { ReactionCommandHandler } from '@bot/abstract/handlers/reaction.command.
 
 export class ExplainCommand extends ReactionCommandHandler {
   async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, context: Context) {
-    context.logger.debug('Clarify command invoked');
+    context.logger.info('Clarify command invoked');
 
     const { content, attachments, channel } = reaction.message;
 
@@ -32,6 +32,6 @@ export class ExplainCommand extends ReactionCommandHandler {
       });
     }
 
-    context.logger.debug('Clarify command executed');
+    context.logger.info('Clarify command executed');
   }
 }

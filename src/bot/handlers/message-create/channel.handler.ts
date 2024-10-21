@@ -24,8 +24,6 @@ export class ChannelHandler extends CreateHandler {
     context.logger.info('Bot mentioned in the message');
 
     await message.react(this.emojis.getRandom());
-    await message.react(this.emojis.getRandom());
-    await message.react(this.emojis.getRandom());
 
     const thread = await this.createThread(message);
     const conversation = this.createConversation(message, thread, context);

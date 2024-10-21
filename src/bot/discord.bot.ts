@@ -1,26 +1,4 @@
-import { type Database, SQLiteError } from 'bun:sqlite';
-import chalk from 'chalk';
-import {
-  ActivityType,
-  Client,
-  Events,
-  GatewayIntentBits,
-  MessageReaction,
-  type CacheType,
-  type Interaction,
-  type Message,
-  type PartialMessage,
-  type PartialMessageReaction,
-  type PartialUser,
-  type User,
-} from 'discord.js';
 import { Conversations } from '@ai/conversations.ts';
-import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
-import { MessagesRepository } from '@db/repositories/messages.repository.ts';
-import { Context } from '@utils/context.ts';
-import { Logger } from '@utils/logger.ts';
-import { NameMaker } from '@utils/name.maker.ts';
-import { UnicodeUtils } from '@utils/unicode.utils.ts';
 import { CreateHandler } from '@bot/abstract/handlers/create.handler.ts';
 import { ReactionCommands } from '@bot/commands/reaction.commands.ts';
 import { SlashCommands } from '@bot/commands/slash.commands.ts';
@@ -30,6 +8,27 @@ import { UrlAnalyzer } from '@bot/handlers/analyzers/url.analyzer.ts';
 import { ChannelHandler } from '@bot/handlers/message-create/channel.handler.ts';
 import { HelpHandler } from '@bot/handlers/message-create/help.handler.ts';
 import { ThreadHandler } from '@bot/handlers/message-create/thread.handler.ts';
+import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
+import { MessagesRepository } from '@db/repositories/messages.repository.ts';
+import { Context } from '@utils/context.ts';
+import { Logger } from '@utils/logger.ts';
+import { NameMaker } from '@utils/name.maker.ts';
+import { UnicodeUtils } from '@utils/unicode.utils.ts';
+import { type Database, SQLiteError } from 'bun:sqlite';
+import {
+  ActivityType,
+  type CacheType,
+  Client,
+  Events,
+  GatewayIntentBits,
+  type Interaction,
+  type Message,
+  MessageReaction,
+  type PartialMessage,
+  type PartialMessageReaction,
+  type PartialUser,
+  type User,
+} from 'discord.js';
 
 export class DiscordBot {
   readonly messageLimit = 2000;
@@ -141,11 +140,9 @@ export class DiscordBot {
   private async onMessageCreate(message: Message) {
     const context = Context.fromMessage(message);
 
-    const messages = ['Message received'];
+    const messages = ['Message send'];
     if (message.attachments.size) messages.push(`with Attachments of ${message.attachments.size}`);
-    context.logger.info(
-      messages.join(', ') + `: ${this.unicodeUtils.toAscii(message.content) || chalk.grey('<EMPTY>')}`,
-    );
+    context.logger.info(messages.join(', ') + `: ${this.unicodeUtils.toAscii(message.content)}`);
 
     if (message.author.bot) return;
 

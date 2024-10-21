@@ -19,6 +19,7 @@ export class GrammarlyCommand extends ReactionCommandHandler {
 
     if (reaction.message.content === null) return;
     if (reaction.message.hasThread) return;
+    if (reaction.message.thread?.id) return;
     if (reaction.message.author?.bot) return;
 
     await reaction.message.channel.sendTyping();
