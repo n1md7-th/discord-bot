@@ -8,8 +8,8 @@ import {
 } from 'discord.js';
 import type { Context } from '@utils/context.ts';
 import { Randomizer } from '@utils/randomizer.ts';
-import { ReactionCommandHandler } from '../../abstract/handlers/reaction.command.ts';
-import { BotException } from '../../exceptions/bot.exception.ts';
+import { ReactionCommandHandler } from '@bot/abstract/handlers/reaction.command.ts';
+import { BotException } from '@bot/exceptions/bot.exception.ts';
 
 export class GrammarlyCommand extends ReactionCommandHandler {
   private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);
@@ -24,7 +24,9 @@ export class GrammarlyCommand extends ReactionCommandHandler {
 
     await reaction.message.channel.sendTyping();
 
+    context.logger.debug('Reacting to the message...');
     await reaction.message.react(this.emojis.getRandom());
+    context.logger.debug('Message reacted');
 
     const thread = await this.createThread(reaction);
 

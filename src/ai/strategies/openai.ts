@@ -1,9 +1,9 @@
 import OpenAI from 'openai';
 import { openAiApiKey } from '../../config';
-import { RoleEnum } from '../../db/enums/message.enum.ts';
-import type { ConversationsRepository } from '../../db/repositories/conversations.repository.ts';
-import { type MessagesRepository } from '../../db/repositories/messages.repository.ts';
-import { type Context } from '../../utils/context.ts';
+import { RoleEnum } from '@db/enums/message.enum.ts';
+import type { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
+import { type MessagesRepository } from '@db/repositories/messages.repository.ts';
+import { type Context } from '@utils/context.ts';
 import { Conversation } from '../abstract/abstract.conversation.ts';
 import { AiResponse } from '../response/ai.response.ts';
 import type { OpenAiMessage } from '../types/openai.ts';
