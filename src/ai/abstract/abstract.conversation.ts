@@ -1,5 +1,5 @@
-import type { RoleEnum } from '../../db/enums/message.enum.ts';
-import type { Context } from '../../utils/context.ts';
+import type { RoleEnum } from '@db/enums/message.enum.ts';
+import type { Context } from '@utils/context.ts';
 import { AiResponse } from '../response/ai.response.ts';
 
 export abstract class Conversation {

@@ -1,4 +1,5 @@
 import { type Database, SQLiteError } from 'bun:sqlite';
+import chalk from 'chalk';
 import {
   ActivityType,
   Client,
@@ -45,12 +46,7 @@ export class DiscordBot {
 
   readonly client: Client;
 
-  readonly handlers: {
-    thread: CreateHandler;
-    channel: CreateHandler;
-    help: CreateHandler;
-    urlSanitizer: CreateHandler;
-  };
+  readonly handlers: Record<'thread' | 'channel' | 'help' | 'urlSanitizer', CreateHandler>;
 
   readonly conversationRepository: ConversationsRepository;
   readonly messagesRepository: MessagesRepository;
@@ -143,14 +139,15 @@ export class DiscordBot {
   }
 
   private async onMessageCreate(message: Message) {
-    if (message.author.bot) return;
-
     const context = Context.fromMessage(message);
 
-    context.logger.info(`Message received: ${this.unicodeUtils.toAscii(message.content)}`);
-    if (message.attachments.size) {
-      context.logger.info(`With Attachments of ${message.attachments.size}`);
-    }
+    const messages = ['Message received'];
+    if (message.attachments.size) messages.push(`with Attachments of ${message.attachments.size}`);
+    context.logger.info(
+      messages.join(', ') + `: ${this.unicodeUtils.toAscii(message.content) || chalk.grey('<EMPTY>')}`,
+    );
+
+    if (message.author.bot) return;
 
     try {
       await this.handlers.urlSanitizer.handle(message, context);
@@ -177,27 +174,23 @@ export class DiscordBot {
     oldMessage: Message<boolean> | PartialMessage,
     newMessage: Message<boolean> | PartialMessage,
   ) {
-    if (oldMessage.author?.bot) return;
-
     const context = Context.fromMessage(newMessage);
 
     context.logger.info(`Message updated: ${this.unicodeUtils.toAscii(newMessage.content)}`);
   }
 
   private onMessageDelete(message: Message<boolean> | PartialMessage) {
-    if (message.author?.bot) return;
-
     const context = Context.fromMessage(message);
 
     context.logger.info(`Message deleted: ${this.unicodeUtils.toAscii(message.content)}`);
   }
 
   private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
-    if (user.bot) return;
-
     const context = Context.fromReaction(reaction, user);
 
     context.logger.info(`Reaction added: ${reaction.emoji.name}`);
+
+    if (user.bot) return;
 
     try {
       const command = this.reactionCommands.getByEmoji(reaction.emoji);

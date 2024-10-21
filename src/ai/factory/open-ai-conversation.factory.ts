@@ -1,5 +1,5 @@
-import { StrategyEnum, TemplateEnum } from '../../db/enums/conversation.enum.ts';
-import type { RoleEnum } from '../../db/enums/message.enum.ts';
+import { StrategyEnum, TemplateEnum } from '@db/enums/conversation.enum.ts';
+import type { RoleEnum } from '@db/enums/message.enum.ts';
 import type { Conversation } from '../abstract/abstract.conversation.ts';
 import { AbstractCreator } from '../abstract/abstract.creator.ts';
 import { OpenAiStrategy } from '../strategies/openai.ts';

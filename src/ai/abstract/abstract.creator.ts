@@ -1,4 +1,4 @@
-import type { DiscordBot } from '../../bot/discord.bot.ts';
+import type { DiscordBot } from '@bot/discord.bot.ts';
 import { Conversation } from './abstract.conversation.ts';
 
 export abstract class AbstractCreator {

@@ -6,7 +6,7 @@ export class ThreadHandler extends CreateHandler {
   private readonly thresholdReachedMessage = "I'm sorry, that is too many messages for this conversation.";
 
   async handle(message: Message, context: Context) {
-    context.logger.info('Thread handler invoked');
+    context.logger.debug('Thread handler invoked');
 
     let content = message.content;
 
@@ -38,6 +38,6 @@ export class ThreadHandler extends CreateHandler {
       }
     }
 
-    context.logger.info('Thread handler executed');
+    context.logger.debug('Thread handler executed');
   }
 }

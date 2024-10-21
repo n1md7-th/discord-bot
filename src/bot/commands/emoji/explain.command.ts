@@ -1,10 +1,10 @@
 import { MessageReaction, type PartialMessageReaction, type PartialUser, type User } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
-import { ReactionCommandHandler } from '../../abstract/handlers/reaction.command.ts';
+import type { Context } from '@utils/context.ts';
+import { ReactionCommandHandler } from '@bot/abstract/handlers/reaction.command.ts';
 
 export class ExplainCommand extends ReactionCommandHandler {
   async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, context: Context) {
-    context.logger.info('Clarify command invoked');
+    context.logger.debug('Clarify command invoked');
 
     const { content, attachments, channel } = reaction.message;
 
@@ -32,6 +32,6 @@ export class ExplainCommand extends ReactionCommandHandler {
       });
     }
 
-    context.logger.info('Clarify command executed');
+    context.logger.debug('Clarify command executed');
   }
 }

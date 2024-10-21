@@ -1,4 +1,4 @@
-import { StringUtils } from '../../utils/string.utils.ts';
+import { StringUtils } from '@utils/string.utils.ts';
 
 export class AiResponse {
   readonly chunks: string[];
