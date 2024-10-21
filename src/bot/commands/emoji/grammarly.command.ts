@@ -24,9 +24,7 @@ export class GrammarlyCommand extends ReactionCommandHandler {
 
     await reaction.message.channel.sendTyping();
 
-    context.logger.debug('Reacting to the message...');
-    await reaction.message.react(this.emojis.getRandom());
-    context.logger.debug('Message reacted');
+    // await reaction.message.react(this.emojis.getRandom());
 
     const thread = await this.createThread(reaction);
 

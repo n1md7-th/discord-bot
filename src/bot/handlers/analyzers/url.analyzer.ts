@@ -16,7 +16,7 @@ export class UrlAnalyzer extends CreateHandler {
 
     context.logger.info('Url analyzer invoked');
 
-    await message.react('👀');
+    // await message.react('👀');
 
     const extractedUrls = this.extractUrls(message);
     if (!extractedUrls) return;

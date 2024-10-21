@@ -13,7 +13,7 @@ export class ExplainCommand extends ReactionCommandHandler {
     if (this.bot.conversations.existBy(reaction.message.id)) return;
 
     await channel.sendTyping();
-    await reaction.message.react('💬');
+    // await reaction.message.react('💬');
 
     const conversation = this.bot.conversations.createClarifyBy(reaction.message.id, context);
 
