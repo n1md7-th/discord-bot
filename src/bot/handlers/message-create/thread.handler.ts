@@ -1,5 +1,5 @@
 import type { Message } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
+import type { Context } from '@utils/context.ts';
 import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 
 export class ThreadHandler extends CreateHandler {

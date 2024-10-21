@@ -43,9 +43,9 @@ export class Logger {
       [
         `[${this.getFormattedDate()}]`,
         `[${this.getFormattedLevel(level)}]`,
-        `[ID:${this.getFormattedMessageId(this.options.messageId)}]`,
-        `[CH:${this.getFormattedChannelId(this.options.channelId)}]`,
-        `[${this.options.label}]`,
+        `[${this.getFormattedChannelId(this.options.channelId)}]`,
+        `[${this.getFormattedMessageId(this.options.messageId)}]`,
+        `[${chalk.bold(chalk.cyan(this.options.label))}]`,
         `[+${this.getDelta()}ms]`,
       ].join(''),
       ...message,
@@ -53,10 +53,10 @@ export class Logger {
   }
 
   private nullishStringify(value: unknown) {
-    if (value === null) return '<NULL>';
-    if (value === undefined) return '<UNDEFINED>';
+    if (value === null) return chalk.yellow('<NULL>');
+    if (value === undefined) return chalk.yellow('<UNDEFINED>');
 
-    if (value === '') return '<EMPTY>';
+    if (value === '') return chalk.yellow('<EMPTY>');
 
     return value;
   }
@@ -91,7 +91,7 @@ export class Logger {
   private getFormattedMessageId(message?: string) {
     if (!message) return this.EMPTY;
 
-    return chalk.blueBright(message);
+    return chalk.bold(chalk.blueBright(message));
   }
 
   private getFormattedChannelId(channel?: string) {

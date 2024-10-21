@@ -6,8 +6,8 @@ import {
   type PartialUser,
   type User,
 } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
-import { Randomizer } from '../../../utils/randomizer.ts';
+import type { Context } from '@utils/context.ts';
+import { Randomizer } from '@utils/randomizer.ts';
 import { ReactionCommandHandler } from '../../abstract/handlers/reaction.command.ts';
 import { BotException } from '../../exceptions/bot.exception.ts';
 
