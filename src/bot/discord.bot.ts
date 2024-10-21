@@ -185,8 +185,7 @@ export class DiscordBot {
   private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
     const context = Context.fromReaction(reaction, user);
 
-    context.logger.info(`Reaction added --: ${reaction.emoji.name}`);
-    context.logger.debug(`Reacted by Bot: ${reaction.client.user.bot}, ${user.bot}`);
+    context.logger.info(`Reaction added: ${reaction.emoji.name}`);
 
     if (user.bot) return;
 
