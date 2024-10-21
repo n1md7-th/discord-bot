@@ -241,12 +241,8 @@ export class DiscordBot {
   }
 
   private async notifyChannel(message: Message<boolean> | PartialMessage, error: BotException) {
-    await this.client.channels.fetch(message.channelId).then(async (channel) => {
-      if (channel?.isSendable()) {
-        this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
-        await channel.send(error.getErrorMessage()).catch(this.logger.error);
-      }
-    });
+    this.logger.error('Bot Exception:', error.getErrorMessage(), error.getPrivateMessage());
+    message.channel.send(error.getErrorMessage()).catch(this.logger.error);
   }
 
   private onError(error: Error) {
