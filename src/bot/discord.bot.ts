@@ -13,7 +13,6 @@ import { MessagesRepository } from '@db/repositories/messages.repository.ts';
 import { Context } from '@utils/context.ts';
 import { Logger } from '@utils/logger.ts';
 import { NameMaker } from '@utils/name.maker.ts';
-import { pipe } from '@utils/pipe.ts';
 import { UnicodeUtils } from '@utils/unicode.utils.ts';
 import { type Database, SQLiteError } from 'bun:sqlite';
 import chalk from 'chalk';
@@ -28,6 +27,7 @@ import {
   MessageReaction,
   type PartialMessage,
   type PartialMessageReaction,
+  Partials,
   type PartialUser,
   type User,
 } from 'discord.js';
@@ -85,6 +85,14 @@ export class DiscordBot {
         GatewayIntentBits.GuildEmojisAndStickers,
         GatewayIntentBits.GuildWebhooks,
       ],
+      partials: [
+        Partials.User,
+        Partials.Message,
+        Partials.Channel,
+        Partials.Reaction,
+        Partials.GuildMember,
+        Partials.ThreadMember,
+      ],
     });
     this.handlers = {
       thread: new ThreadHandler(this),
@@ -114,6 +122,9 @@ export class DiscordBot {
     this.client.on(Events.MessageUpdate, this.onMessageUpdate);
     this.client.on(Events.MessageDelete, this.onMessageDelete);
     this.client.on(Events.MessageReactionRemove, this.onMessageReactionRemove);
+    this.client.on(Events.GuildMemberAvailable, (member) => {
+      this.logger.info(`Member Available: ${member.user.tag}`);
+    });
 
     return this;
   }
@@ -145,7 +156,7 @@ export class DiscordBot {
   private async onMessageCreate(message: Message) {
     const context = Context.fromMessage(message);
 
-    const messages = [chalk.blueBright('[SENT]')];
+    const messages = [chalk.blueBright(`[SENT]`)];
     if (message.attachments.size) messages.push(`with Attachments of ${message.attachments.size}`);
     context.logger.info(messages.join(', ') + `: ${this.unicodeUtils.toNormalized(message.content)}`);
 

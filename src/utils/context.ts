@@ -1,5 +1,6 @@
 import type {
   CacheType,
+  Channel,
   Interaction,
   Message,
   MessageReaction,
@@ -8,6 +9,8 @@ import type {
   PartialUser,
   User,
 } from 'discord.js';
+import { ChannelType } from 'discord-api-types/v10';
+
 import { Logger, type LoggerOptions } from './logger.ts';
 
 export class Context {
@@ -26,6 +29,7 @@ export class Context {
       messageId: message.id,
       channelId: message.channel.id,
       label: message.author?.username || '<Unknown User>',
+      type: Context.getChannelType(message.channel),
     });
   }
 
@@ -34,6 +38,7 @@ export class Context {
       messageId: reaction.message.id,
       channelId: reaction.message.channel.id,
       label: user.username || '<Unknown User>',
+      type: Context.getChannelType(reaction.message.channel),
     });
   }
 
@@ -42,6 +47,19 @@ export class Context {
       messageId: interaction.id,
       channelId: interaction.channel?.id || '<Unknown Channel>',
       label: interaction.user.username || '<Unknown User>',
+      type: 'INTERACTION',
     });
+  }
+
+  private static getChannelType(channel: Channel): string {
+    switch (channel.type) {
+      case ChannelType.DM:
+        return 'DM';
+      case ChannelType.PrivateThread:
+      case ChannelType.PublicThread:
+        return 'THREAD';
+      default:
+        return 'CHANNEL';
+    }
   }
 }

@@ -2,6 +2,7 @@ import chalk from 'chalk';
 
 export type LoggerOptions = {
   label: string;
+  type?: string;
   messageId?: string;
   channelId?: string;
 };
@@ -47,6 +48,7 @@ export class Logger {
         `[${this.getFormattedMessageId(this.options.messageId)}]`,
         `[${chalk.bold(chalk.cyan(this.options.label))}]`,
         `[+${this.getDelta()}ms]`,
+        `[${this.options.type || ''}]`,
       ].join(''),
       ...message,
     ];
