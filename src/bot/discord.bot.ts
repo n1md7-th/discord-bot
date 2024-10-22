@@ -157,8 +157,8 @@ export class DiscordBot {
     const context = Context.fromMessage(message);
 
     const messages = [chalk.blueBright(`[SENT]`)];
-    if (message.attachments.size) messages.push(`with Attachments of ${message.attachments.size}`);
-    context.logger.info(messages.join(', ') + `: ${this.unicodeUtils.toNormalized(message.content)}`);
+    if (message.attachments.size) messages.push(`${chalk.blueBright(`[ATTACHMENTS ${message.attachments.size}]`)}`);
+    context.logger.info(messages.join(':') + `: ${this.unicodeUtils.toNormalized(message.content)}`);
 
     if (message.author.bot) return;
 
