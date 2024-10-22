@@ -13,8 +13,10 @@ import { MessagesRepository } from '@db/repositories/messages.repository.ts';
 import { Context } from '@utils/context.ts';
 import { Logger } from '@utils/logger.ts';
 import { NameMaker } from '@utils/name.maker.ts';
+import { pipe } from '@utils/pipe.ts';
 import { UnicodeUtils } from '@utils/unicode.utils.ts';
 import { type Database, SQLiteError } from 'bun:sqlite';
+import chalk from 'chalk';
 import {
   ActivityType,
   type CacheType,
@@ -29,6 +31,7 @@ import {
   type PartialUser,
   type User,
 } from 'discord.js';
+import * as emoji from 'node-emoji';
 
 export class DiscordBot {
   readonly messageLimit = 2000;
@@ -98,6 +101,7 @@ export class DiscordBot {
     this.onMessageDelete = this.onMessageDelete.bind(this);
     this.onInteractionCreate = this.onInteractionCreate.bind(this);
     this.onMessageReactionAdd = this.onMessageReactionAdd.bind(this);
+    this.onMessageReactionRemove = this.onMessageReactionRemove.bind(this);
   }
 
   subscribe() {
@@ -109,6 +113,7 @@ export class DiscordBot {
     this.client.on(Events.InteractionCreate, this.onInteractionCreate);
     this.client.on(Events.MessageUpdate, this.onMessageUpdate);
     this.client.on(Events.MessageDelete, this.onMessageDelete);
+    this.client.on(Events.MessageReactionRemove, this.onMessageReactionRemove);
 
     return this;
   }
@@ -140,9 +145,9 @@ export class DiscordBot {
   private async onMessageCreate(message: Message) {
     const context = Context.fromMessage(message);
 
-    const messages = ['Message send'];
+    const messages = [chalk.blueBright('[SENT]')];
     if (message.attachments.size) messages.push(`with Attachments of ${message.attachments.size}`);
-    context.logger.info(messages.join(', ') + `: ${this.unicodeUtils.toAscii(message.content)}`);
+    context.logger.info(messages.join(', ') + `: ${this.unicodeUtils.toNormalized(message.content)}`);
 
     if (message.author.bot) return;
 
@@ -173,19 +178,22 @@ export class DiscordBot {
   ) {
     const context = Context.fromMessage(newMessage);
 
-    context.logger.info(`Message updated: ${this.unicodeUtils.toAscii(newMessage.content)}`);
+    context.logger.info(
+      `${chalk.cyanBright('[UPDATED]')}: ${this.unicodeUtils.highlightedDifference(oldMessage.content, newMessage.content)}`,
+    );
   }
 
   private onMessageDelete(message: Message<boolean> | PartialMessage) {
     const context = Context.fromMessage(message);
 
-    context.logger.info(`Message deleted: ${this.unicodeUtils.toAscii(message.content)}`);
+    context.logger.info(
+      `${chalk.redBright('[DELETED]')}: ${chalk.strikethrough(this.unicodeUtils.toNormalized(message.content))}`,
+    );
   }
 
   private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
     const context = Context.fromReaction(reaction, user);
-
-    context.logger.info(`Reaction added: ${reaction.emoji.name}`);
+    context.logger.info(`${chalk.blueBright('[REACTED]')}: ${emoji.unemojify(reaction.emoji.name || '🐾')}`);
 
     if (user.bot) return;
 
@@ -200,6 +208,11 @@ export class DiscordBot {
         await this.notifyChannel(reaction.message, error);
       }
     }
+  }
+
+  private onMessageReactionRemove(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
+    const context = Context.fromReaction(reaction, user);
+    context.logger.info(`${chalk.redBright('[UNREACTED]')}: ${emoji.unemojify(reaction.emoji.name || '🐾')}`);
   }
 
   private async onInteractionCreate(interaction: Interaction<CacheType>) {

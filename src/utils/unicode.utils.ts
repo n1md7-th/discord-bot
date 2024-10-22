@@ -1,4 +1,6 @@
+import { pipe } from '@utils/pipe.ts';
 import chalk from 'chalk';
+import * as emoji from 'node-emoji';
 
 export class UnicodeUtils {
   private readonly map = new Map([
@@ -48,6 +50,32 @@ export class UnicodeUtils {
     if (!this.needsTranslation(content)) return content;
 
     return chalk.blueBright('<KA->EN> ') + content.split('').map(this.toEnglish).join('');
+  }
+
+  toUnicode(content: string | null) {
+    if (!content) return chalk.grey('<EMPTY>');
+
+    return emoji.unemojify(content);
+  }
+
+  toNormalized(content: string | null) {
+    return pipe(content || '', this.toAscii, this.toUnicode);
+  }
+
+  highlightedDifference(a: string | null, b: string | null) {
+    a ||= '';
+    b ||= '';
+
+    if (a.length < b.length) [a, b] = [b, a];
+
+    return a
+      .split('')
+      .map((char, index) => {
+        if (char === b[index]) return chalk.grey(char);
+
+        return chalk.redBright(char);
+      })
+      .join('');
   }
 
   private needsTranslation(letter: string) {
