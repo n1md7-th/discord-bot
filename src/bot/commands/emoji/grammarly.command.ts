@@ -1,3 +1,5 @@
+import { ReactionCommandHandler } from '@bot/abstract/handlers/reaction.command.ts';
+import { BotException } from '@bot/exceptions/bot.exception.ts';
 import {
   MessageReaction,
   ThreadAutoArchiveDuration,
@@ -8,11 +10,9 @@ import {
 } from 'discord.js';
 import type { Context } from '@utils/context.ts';
 import { Randomizer } from '@utils/randomizer.ts';
-import { ReactionCommandHandler } from '@bot/abstract/handlers/reaction.command.ts';
-import { BotException } from '@bot/exceptions/bot.exception.ts';
 
 export class GrammarlyCommand extends ReactionCommandHandler {
-  // private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);
+  private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);
 
   async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, context: Context) {
     context.logger.info('Grammarly command invoked');
@@ -24,8 +24,7 @@ export class GrammarlyCommand extends ReactionCommandHandler {
 
     await reaction.message.channel.sendTyping();
 
-    // await reaction.message.react(this.emojis.getRandom());
-    // await reaction.message.react('🤬');
+    await reaction.message.react(this.emojis.getRandom());
 
     const thread = await this.createThread(reaction);
 
@@ -56,7 +55,7 @@ export class GrammarlyCommand extends ReactionCommandHandler {
       .catch((exception) => {
         throw new BotException({
           exception,
-          message: 'I could not create a thread here. Perhaps it is not allowed 😕',
+          message: 'I could not create a thread 🥺',
           channelId: reaction.message.channelId,
           messageId: reaction.message.id,
         });

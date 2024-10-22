@@ -1,5 +1,5 @@
 import type { Message } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
+import type { Context } from '@utils/context.ts';
 import { MessageCommandHandler } from '../../abstract/handlers/message.command.ts';
 import { StringCommandEnum } from '../../enums/command.enum.ts';
 

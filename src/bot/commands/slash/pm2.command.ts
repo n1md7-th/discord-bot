@@ -1,6 +1,6 @@
 import { type CacheType, ChatInputCommandInteraction, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { SlashCommandHandler } from '../../abstract/handlers/slash.command.ts';
-import type { Context } from '../../../utils/context.ts';
+import type { Context } from '@utils/context.ts';
 import { $ } from 'bun';
 
 export class Pm2Command extends SlashCommandHandler {

@@ -1,5 +1,5 @@
 import { type CacheType, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
+import type { Context } from '@utils/context.ts';
 import { SlashCommandHandler } from '../../abstract/handlers/slash.command.ts';
 
 export class PingCommand extends SlashCommandHandler {
