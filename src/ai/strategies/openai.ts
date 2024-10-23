@@ -60,6 +60,12 @@ export class OpenAiStrategy extends Conversation {
     }
   }
 
+  override addSystemMessage(content: string): this {
+    this.addMessageBy(RoleEnum.System, content);
+
+    return this;
+  }
+
   override addUserMessage(content: string): this {
     this.addMessageBy(RoleEnum.User, content);
 

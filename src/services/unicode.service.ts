@@ -2,7 +2,7 @@ import { pipe } from '@utils/pipe.ts';
 import chalk from 'chalk';
 import * as emoji from 'node-emoji';
 
-export class UnicodeUtils {
+export class UnicodeService {
   private readonly map = new Map([
     ['ა', 'a'],
     ['ბ', 'b'],

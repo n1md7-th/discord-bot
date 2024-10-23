@@ -1,6 +1,7 @@
+import { OpenAiTranslateTemplate } from '@ai/templates/openai/translate.template.ts';
 import { StrategyEnum, TemplateEnum } from '@db/enums/conversation.enum.ts';
 import type { RoleEnum } from '@db/enums/message.enum.ts';
-import type { Conversation } from '../abstract/abstract.conversation.ts';
+import { type Conversation } from '../abstract/abstract.conversation.ts';
 import { AbstractCreator } from '../abstract/abstract.creator.ts';
 import { OpenAiStrategy } from '../strategies/openai.ts';
 import { OpenAiClarifyTemplate } from '../templates/openai/clarify.template.ts';
@@ -15,6 +16,24 @@ export class OpenAiConversationFactory extends AbstractCreator {
       strategy: StrategyEnum.OpenAI,
     });
     const template = new OpenAiGrammarlyTemplate();
+    for (const message of template.getTemplate()) {
+      this.bot.messagesRepository.create({
+        conversationId: conversation.id,
+        role: message.role as RoleEnum,
+        content: message.content as string,
+      });
+    }
+
+    return new OpenAiStrategy(conversation.id, this.bot.conversationRepository, this.bot.messagesRepository);
+  }
+
+  override createTranslateBy(conversationId: string): Conversation {
+    const conversation = this.bot.conversationRepository.create({
+      id: conversationId,
+      template: TemplateEnum.Translate,
+      strategy: StrategyEnum.OpenAI,
+    });
+    const template = new OpenAiTranslateTemplate();
     for (const message of template.getTemplate()) {
       this.bot.messagesRepository.create({
         conversationId: conversation.id,

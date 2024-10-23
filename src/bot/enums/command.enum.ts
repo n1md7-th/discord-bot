@@ -15,4 +15,6 @@ export enum SlashCommandEnum {
   Ping = 'ping',
   IP = 'ip',
   PM2 = 'pm2',
+  Sanitize = 'sanitize',
+  Translate = 'translate',
 }

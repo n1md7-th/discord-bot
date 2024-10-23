@@ -8,12 +8,14 @@ import { UrlAnalyzer } from '@bot/handlers/analyzers/url.analyzer.ts';
 import { ChannelHandler } from '@bot/handlers/message-create/channel.handler.ts';
 import { HelpHandler } from '@bot/handlers/message-create/help.handler.ts';
 import { ThreadHandler } from '@bot/handlers/message-create/thread.handler.ts';
+import { UrlAnalyzerService } from '@services/analyzer.service.ts';
 import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
 import { MessagesRepository } from '@db/repositories/messages.repository.ts';
+import { WebhookService } from '@services/webhook.service.ts';
 import { Context } from '@utils/context.ts';
 import { Logger } from '@utils/logger.ts';
 import { NameMaker } from '@utils/name.maker.ts';
-import { UnicodeUtils } from '@utils/unicode.utils.ts';
+import { UnicodeService } from '@services/unicode.service.ts';
 import { type Database, SQLiteError } from 'bun:sqlite';
 import chalk from 'chalk';
 import {
@@ -58,7 +60,11 @@ export class DiscordBot {
   slug!: string;
   username!: string;
 
-  readonly unicodeUtils: UnicodeUtils;
+  readonly services: {
+    unicode: UnicodeService;
+    analyzer: UrlAnalyzerService;
+    webhook: WebhookService;
+  };
 
   constructor(
     readonly logger: Logger,
@@ -100,7 +106,11 @@ export class DiscordBot {
       help: new HelpHandler(this),
       urlSanitizer: new UrlAnalyzer(this),
     };
-    this.unicodeUtils = new UnicodeUtils();
+    this.services = {
+      unicode: new UnicodeService(),
+      analyzer: new UrlAnalyzerService(),
+      webhook: new WebhookService(),
+    };
 
     this.onError = this.onError.bind(this);
     this.onClientReady = this.onClientReady.bind(this);
@@ -158,7 +168,7 @@ export class DiscordBot {
 
     const messages = [chalk.blueBright(`[SENT]`)];
     if (message.attachments.size) messages.push(`${chalk.blueBright(`[ATTACHMENTS ${message.attachments.size}]`)}`);
-    context.logger.info(messages.join(':') + `: ${this.unicodeUtils.toNormalized(message.content)}`);
+    context.logger.info(messages.join(':') + `: ${this.services.unicode.toNormalized(message.content)}`);
 
     if (message.author.bot) return;
 
@@ -190,7 +200,7 @@ export class DiscordBot {
     const context = Context.fromMessage(newMessage);
 
     context.logger.info(
-      `${chalk.cyanBright('[UPDATED]')}: ${this.unicodeUtils.highlightedDifference(oldMessage.content, newMessage.content)}`,
+      `${chalk.cyanBright('[UPDATED]')}: ${this.services.unicode.highlightedDifference(oldMessage.content, newMessage.content)}`,
     );
   }
 
@@ -198,7 +208,7 @@ export class DiscordBot {
     const context = Context.fromMessage(message);
 
     context.logger.info(
-      `${chalk.redBright('[DELETED]')}: ${chalk.strikethrough(this.unicodeUtils.toNormalized(message.content))}`,
+      `${chalk.redBright('[DELETED]')}: ${chalk.strikethrough(this.services.unicode.toNormalized(message.content))}`,
     );
   }
 

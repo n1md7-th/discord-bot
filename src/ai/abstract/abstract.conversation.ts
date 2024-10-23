@@ -15,6 +15,10 @@ export abstract class Conversation {
 
   abstract addUserMessage(content: string): this;
 
+  addSystemMessage(content: string): this {
+    throw new Error('Method:addSystemMessage not implemented.');
+  }
+
   abstract sendRequest(context: Context, maxChunkSize?: number): Promise<AiResponse>;
 
   protected abstract addMessageBy(role: RoleEnum, content: string): this;

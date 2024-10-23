@@ -1,3 +1,5 @@
+import { SanitizeCommand } from '@bot/commands/slash/sanitize.command.ts';
+import { TranslateCommand } from '@bot/commands/slash/translate.command.ts';
 import type { SlashCommandHandler } from '../abstract/handlers/slash.command.ts';
 import type { DiscordBot } from '../discord.bot.ts';
 import { SlashCommandEnum } from '../enums/command.enum.ts';
@@ -14,6 +16,8 @@ export class SlashCommands {
     this.commands.set(SlashCommandEnum.Ping, new PingCommand(bot));
     this.commands.set(SlashCommandEnum.IP, new IpCommand(bot));
     this.commands.set(SlashCommandEnum.PM2, new Pm2Command(bot));
+    this.commands.set(SlashCommandEnum.Sanitize, new SanitizeCommand(bot));
+    this.commands.set(SlashCommandEnum.Translate, new TranslateCommand(bot));
   }
 
   getByName(name: string) {

@@ -2,6 +2,7 @@ import {
   type CacheType,
   type ChatInputCommandInteraction,
   type SlashCommandBuilder,
+  type SlashCommandOptionsOnlyBuilder,
   type SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js';
 import type { Context } from '@utils/context.ts';
@@ -10,7 +11,7 @@ import { DiscordBot } from '@bot/discord.bot.ts';
 export abstract class SlashCommandHandler {
   constructor(protected readonly bot: DiscordBot) {}
 
-  abstract register(): SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
+  abstract register(): SlashCommandBuilder | SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
 
   abstract execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void>;
 }

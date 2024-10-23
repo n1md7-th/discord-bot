@@ -32,6 +32,11 @@ export class Conversations {
     return this.getInstanceBy(entity);
   }
 
+  createTranslateBy(conversationId: string, context: Context) {
+    context.logger.info(`Creating Translate conversation for ${conversationId}`);
+    return this.openAiConversationFactory.createTranslateBy(conversationId);
+  }
+
   createGrammarlyBy(conversationId: string, context: Context) {
     context.logger.info(`Creating Grammarly conversation for ${conversationId}`);
     return this.openAiConversationFactory.createGrammarlyBy(conversationId);
