@@ -25,6 +25,7 @@
 
     "experimentalDecorators": true,
     "noImplicitOverride": true,
+    "allowSyntheticDefaultImports": true,
 
     "paths": {
       "@ai/*": ["./src/ai/*"],

@@ -39,6 +39,22 @@ export class TranslateCommand extends SlashCommandHandler {
               name: 'Russian',
               value: 'Russian',
             },
+            {
+              name: 'Spanish',
+              value: 'Spanish',
+            },
+            {
+              name: 'Korean',
+              value: 'Korean',
+            },
+            {
+              name: 'Japanese',
+              value: 'Japanese',
+            },
+            {
+              name: 'Chinese',
+              value: 'Chinese',
+            },
           );
       })
       .addStringOption((option) => {
@@ -66,6 +82,9 @@ export class TranslateCommand extends SlashCommandHandler {
       .createTranslateBy(randomUUID(), context)
       .addUserMessage(text)
       .addSystemMessage(`Translate it into ${target}`)
+      .addSystemMessage(
+        'If the target language is not in English alphabet, please use 2nd option with the English transcription.',
+      )
       .sendRequest(context, 2000)
       .catch((error) => {
         context.logger.error('Failed to translate the text', error);
