@@ -13,8 +13,9 @@ export class UrlAnalyzer extends CreateHandler {
 
     const sanitizedContent = await this.bot.services.analyzer.removeTrackers(message.content);
 
-    if (!this.bot.services.analyzer.isSameContent(message.content, sanitizedContent)) {
-      await message.react('👀'); // Revoke the previous reaction
+    if (this.bot.services.analyzer.isSameContent(message.content, sanitizedContent)) {
+      await message.reactions.removeAll();
+      return;
     }
 
     if (!message.deletable) return context.logger.warn('No permission. Skipping the deletion of the message.');

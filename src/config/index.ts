@@ -1,7 +1,7 @@
 const { env } = import.meta;
 
 export const clientId = env.DISCORD_CLIENT_ID;
-export const guildId = env.DISCORD_GUILD_ID;
+export const guildIds = env.DISCORD_GUILD_IDS.split(',');
 export const token = env.DISCORD_TOKEN;
 export const openAiApiKey = env.OPENAI_API_KEY;
 export const username = env.DISCORD_BOT_USERNAME;
