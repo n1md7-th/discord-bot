@@ -8,14 +8,34 @@ export class IpCommand extends SlashCommandHandler {
   }
 
   async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
-    await interaction.reply({
-      content: `Server IP: ${await this.getIp()}`,
+    await interaction.deferReply({ ephemeral: true }); // Shows "App thinking..." status
+
+    await interaction.editReply({
+      content: `Server IP: **${await this.getIp(context)}**`,
     });
   }
 
-  private async getIp() {
-    return fetch('https://ifconfig.me/ip')
-      .then((res) => res.text())
-      .catch(() => 'Failed to get IP address');
+  private async getIp(context: Context) {
+    return await Promise.allSettled([this.getFromIfconfig(), this.getFromIpify()]).then((results) => {
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+
+        context.logger.error('Failed to get IP address', result.reason);
+      }
+
+      return 'Unable to get IP address from any service';
+    });
+  }
+
+  private async getFromIfconfig() {
+    return fetch('https://ifconfig.me/ip').then((res) => res.text());
+  }
+
+  private async getFromIpify() {
+    return fetch('https://api.ipify.org?format=json')
+      .then((res) => res.json())
+      .then((data) => data.ip);
   }
 }

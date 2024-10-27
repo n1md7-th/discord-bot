@@ -13,9 +13,9 @@ const rest = new REST().setToken(token);
     try {
       logger.info('Started registering application commands', { guildId });
       const commands = new SlashCommands({} as DiscordBot).toREST();
-      const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
 
-      logger.info('Successfully registered application commands', data);
+      logger.info('Successfully registered application commands', { guildId });
     } catch (error) {
       logger.error(error, { guildId });
     }
