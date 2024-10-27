@@ -6,7 +6,7 @@ import type { DiscordBot } from '../discord.bot.ts';
 import { SlashCommandEnum } from '../enums/command.enum.ts';
 import { IpCommand } from './slash/ip.command.ts';
 import { PingCommand } from './slash/ping.command.ts';
-import { Pm2Command } from './slash/pm2.command.ts';
+import { Pm2Command } from './slash/pm2/pm2.command.ts';
 
 export class SlashCommands {
   private readonly commands: Map<string, SlashCommandHandler>;
