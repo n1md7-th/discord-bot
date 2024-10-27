@@ -53,6 +53,7 @@ export class Pm2Command extends SlashCommandHandler {
 
         switch (project) {
           case 'pico': {
+            await interaction.editReply('Deployment started');
             await interaction.editReply({
               content: await this.subcommands.deployment.Pico.deploy(context),
             });
