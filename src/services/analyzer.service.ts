@@ -83,7 +83,10 @@ export class UrlAnalyzerService {
   }
 
   private async getRedirectionUrl(url: string) {
-    const response = await fetch(url, { redirect: 'manual' });
+    const response = await fetch(url, {
+      redirect: 'manual',
+      signal: AbortSignal.timeout(5000),
+    });
 
     const hasRedirection = [301, 302, 303].includes(response.status);
     if (hasRedirection) return response.headers.get('location')!;
