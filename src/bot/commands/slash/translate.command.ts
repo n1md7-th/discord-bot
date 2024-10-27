@@ -1,4 +1,5 @@
 import { AiResponse } from '@ai/response/ai.response.ts';
+import { withDefault } from '@utils/string.utils.ts';
 import { type CacheType, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import type { Context } from '@utils/context.ts';
 import { randomUUID } from 'node:crypto';
@@ -65,6 +66,22 @@ export class TranslateCommand extends SlashCommandHandler {
       .addStringOption((option) => {
         return option
           .setRequired(false)
+          .setName('visible')
+          .setDescription('Whether to send the translated message in the chat. Default is yes')
+          .addChoices(
+            {
+              name: 'Yes',
+              value: 'YES',
+            },
+            {
+              name: 'No',
+              value: 'NO',
+            },
+          );
+      })
+      .addStringOption((option) => {
+        return option
+          .setRequired(false)
           .setName('spoiler')
           .setDescription('Whether to send the translation as a spoiler')
           .addChoices(
@@ -81,21 +98,27 @@ export class TranslateCommand extends SlashCommandHandler {
   }
 
   async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
-    const text = interaction.options.getString('text')!;
-    const target = interaction.options.getString('target')!;
-    const withSpoiler = interaction.options.getString('spoiler') === 'YES';
+    const text = interaction.options.getString('text', true);
+    const target = interaction.options.getString('target', true);
+
+    const withVisible = withDefault(interaction.options.getString('visible', false), 'YES') === 'YES';
+    const withSpoiler = withDefault(interaction.options.getString('spoiler', false), 'NO') === 'YES';
+    const ephemeral = !withVisible;
+
+    await interaction.deferReply({ ephemeral }); // When visible we show the message to everyone
 
     context.logger.info(`Translating __"${text}"__ into **${target}**...`);
 
-    await interaction.deferReply();
-
     for (const content of await this.getTranslation(target, text, context)) {
-      await interaction.followUp({ content });
+      await interaction.followUp({
+        content: withVisible ? content : this.asMarkdownCommand(content),
+        ephemeral,
+      });
     }
 
     if (withSpoiler) {
       for (const content of AiResponse.from(`||${text}||`, this.size)) {
-        await interaction.followUp({ content });
+        await interaction.followUp({ content, ephemeral });
       }
     }
   }
@@ -114,5 +137,9 @@ export class TranslateCommand extends SlashCommandHandler {
 
         return AiResponse.from('Failed to translate the text', this.size);
       });
+  }
+
+  private asMarkdownCommand(text: string) {
+    return 'Translated text is below. :arrow_heading_down:\n\n' + `\`\`\`text\n${text}\n\`\`\``;
   }
 }

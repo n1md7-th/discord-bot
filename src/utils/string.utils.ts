@@ -9,3 +9,7 @@ export class StringUtils {
     return chunks;
   }
 }
+
+export const withDefault = <T>(value: T, defaultValue: T): T => {
+  return value || defaultValue;
+};
