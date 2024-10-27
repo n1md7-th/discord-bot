@@ -15,6 +15,8 @@ export class Pm2Command extends SlashCommandHandler {
   }
 
   async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
+    await interaction.deferReply({ ephemeral: true });
+
     const subcommand = interaction.options.getSubcommand();
 
     context.logger.info(`Executing pm2 ${subcommand} command`);
@@ -25,7 +27,7 @@ export class Pm2Command extends SlashCommandHandler {
 
     switch (subcommand) {
       case 'status':
-        await interaction.reply({
+        await interaction.editReply({
           content: formattedStatus || 'No processes found',
         });
         break;
@@ -37,7 +39,9 @@ export class Pm2Command extends SlashCommandHandler {
     const list = await $`pm2 jlist`.json();
 
     for (const process of list) {
-      builder.push(`**${process.name}** - ${process.pm2_env.status} - ${process.pm2_env.restart_time} restarts`);
+      builder.push(
+        `**${process.pm_id}** - **${process.name}** - ${process.pm2_env.status} - ${process.pm2_env.restart_time} restarts`,
+      );
     }
 
     return builder.join('\n');
