@@ -23,7 +23,7 @@ export class WebhookService {
 
     this.hooks[channel.url] ||= {};
 
-    const hookId = this.getHookId(message);
+    const hookId = this.getHookIdByMessage(message);
 
     // 1st try to get the hook from the cache
     if (this.hooks[channel.url][hookId]) {
@@ -73,7 +73,7 @@ export class WebhookService {
     return (await channel.fetchWebhooks()) as Awaited<Collection<Snowflake, Webhook>>;
   }
 
-  private getHookId(message: Message) {
+  private getHookIdByMessage(message: Message) {
     return message.member?.nickname || message.author.displayName;
   }
 }

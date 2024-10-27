@@ -66,20 +66,22 @@ export class SayCommand extends SlashCommandHandler {
   }
 
   async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
-    await interaction.deferReply();
-
-    const text = interaction.options.getString('text')!;
+    const text = interaction.options.getString('text', true);
     const user = interaction.options.getUser('to');
     const when = interaction.options.getString('when');
+    const ephemeral = (!!when && when !== '0s') || !!user; // If not scheduler we show the message to everyone
+
+    await interaction.deferReply({ ephemeral });
 
     try {
       if (user) return await this.dmUser(user, text, interaction, when);
 
       await this.sentMessage(text, interaction, when);
     } catch (error) {
-      context.logger.error('Failed to sanitize the URL', error);
+      context.logger.error('Failed to send the message', error);
       await interaction.followUp({
-        content: 'Failed to sanitize the URL',
+        content: 'Failed to send the message',
+        ephemeral: true,
       });
     }
   }
@@ -90,26 +92,30 @@ export class SayCommand extends SlashCommandHandler {
     interaction: ChatInputCommandInteraction<CacheType>,
     when: string | null,
   ) {
-    if (!when) {
+    if (!when || when === '0s') {
       await user.send(text);
-      await interaction.followUp({
-        content: `Sent the message to ${user.username}`,
-      });
-      return;
+      await interaction.followUp({ content: `Message sent to ${user.username}`, ephemeral: true });
+
+      return void 0;
     }
 
+    await interaction.followUp({
+      content: `Message scheduled to be sent to ${user.username} in ${when}`,
+      ephemeral: true,
+    });
     delay(ms(when)).then(() => {
       user.send(text);
       interaction.followUp({
-        content: `Sent the message to ${user.username}`,
+        content: `Message sent to ${user.username} after **${when}**`,
+        ephemeral: true,
       });
     });
   }
 
   private async sentMessage(content: string, interaction: ChatInputCommandInteraction<CacheType>, when: string | null) {
-    if (!when) return await interaction.followUp({ content });
+    if (!when || when === '0s') return await interaction.editReply({ content });
 
-    await interaction.followUp({ content: `Will send the message in ${when}` });
-    delay(ms(when)).then(() => interaction.followUp({ content }));
+    await interaction.editReply({ content: `Will send the message in ${when}` });
+    delay(ms(when)).then(() => interaction.editReply({ content }));
   }
 }
