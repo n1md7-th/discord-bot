@@ -1,3 +1,4 @@
+import { SchedulesCreate } from '@db/migrations/scripts/schedules.create.ts';
 import { exit } from 'node:process';
 import { connection } from '../db/connection.ts';
 import { ConversationsCreate } from '../db/migrations/scripts/conversations.create.ts';
@@ -10,6 +11,7 @@ try {
   const migrations = new MigrationsService(logger, connection, [
     new ConversationsCreate(connection),
     new MessagesCreate(connection),
+    new SchedulesCreate(connection),
   ]);
 
   migrations.execute();

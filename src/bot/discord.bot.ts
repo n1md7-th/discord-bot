@@ -8,9 +8,11 @@ import { UrlAnalyzer } from '@bot/handlers/analyzers/url.analyzer.ts';
 import { ChannelHandler } from '@bot/handlers/message-create/channel.handler.ts';
 import { HelpHandler } from '@bot/handlers/message-create/help.handler.ts';
 import { ThreadHandler } from '@bot/handlers/message-create/thread.handler.ts';
+import { SchedulesRepository } from '@db/repositories/schedules.repository.ts';
 import { UrlAnalyzerService } from '@services/analyzer.service.ts';
 import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
 import { MessagesRepository } from '@db/repositories/messages.repository.ts';
+import { SchedulerService } from '@services/scheduler.service.ts';
 import { WebhookService } from '@services/webhook.service.ts';
 import { Context } from '@utils/context.ts';
 import { Logger } from '@utils/logger.ts';
@@ -31,6 +33,7 @@ import {
   type PartialMessageReaction,
   Partials,
   type PartialUser,
+  TextChannel,
   type User,
 } from 'discord.js';
 import * as emoji from 'node-emoji';
@@ -43,6 +46,7 @@ export class DiscordBot {
   readonly techBroThreadName: Generator<string>;
 
   readonly conversations: Conversations;
+  readonly schedules: SchedulerService;
 
   readonly reactionCommands: ReactionCommands;
   readonly stringCommands: StringCommands;
@@ -54,6 +58,7 @@ export class DiscordBot {
 
   readonly conversationRepository: ConversationsRepository;
   readonly messagesRepository: MessagesRepository;
+  readonly schedulesRepository: SchedulesRepository;
 
   id!: string;
   tag!: string;
@@ -72,7 +77,9 @@ export class DiscordBot {
   ) {
     this.conversationRepository = new ConversationsRepository(connection);
     this.messagesRepository = new MessagesRepository(connection);
+    this.schedulesRepository = new SchedulesRepository(connection);
     this.conversations = new Conversations(this);
+    this.schedules = new SchedulerService(this);
     this.reactionCommands = new ReactionCommands(this);
     this.stringCommands = new StringCommands(this);
     this.slashCommands = new SlashCommands(this);
@@ -145,6 +152,30 @@ export class DiscordBot {
 
   async login(token: string) {
     await this.client.login(token);
+  }
+
+  async sendDm(userId: string, text: string) {
+    const user = await this.client.users.fetch(userId);
+
+    return await user.send(text);
+  }
+
+  async sendChannel(channelId: string, text: string) {
+    const channel = await this.client.channels.fetch(channelId);
+
+    if (channel instanceof TextChannel) return await channel.send(text);
+
+    return this.logger.error('Channel is not a text channel to send a message');
+  }
+
+  async sendThread(threadId: string, text: string) {
+    const thread = await this.client.channels.fetch(threadId);
+
+    if (!thread || !thread.isThread()) {
+      return this.logger.error('Thread not found or not a thread');
+    }
+
+    return await thread.send(text);
   }
 
   private async onClientReady(client: Client<true>) {
