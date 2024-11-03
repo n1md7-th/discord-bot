@@ -35,7 +35,7 @@ export class MessagesRepository implements ReadInterface<MessagesEntity> {
       .all({ conversationId }) as MessagesEntity[];
   }
 
-  getByPk(id: string): MessagesEntity | null {
+  getOneByPk(id: string): MessagesEntity | null {
     return this.findByPkQuery.as(MessagesEntity).get({ id });
   }
 

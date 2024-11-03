@@ -18,4 +18,5 @@ export enum SlashCommandEnum {
   Say = 'say',
   Sanitize = 'sanitize',
   Translate = 'translate',
+  Schedule = 'schedule',
 }

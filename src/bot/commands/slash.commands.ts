@@ -1,5 +1,6 @@
 import { SanitizeCommand } from '@bot/commands/slash/sanitize.command.ts';
 import { SayCommand } from '@bot/commands/slash/say.command.ts';
+import { ScheduleCommand } from '@bot/commands/slash/schedule.command.ts';
 import { TranslateCommand } from '@bot/commands/slash/translate.command.ts';
 import type { SlashCommandHandler } from '../abstract/handlers/slash.command.ts';
 import type { DiscordBot } from '../discord.bot.ts';
@@ -20,10 +21,15 @@ export class SlashCommands {
     this.commands.set(SlashCommandEnum.Sanitize, new SanitizeCommand(bot));
     this.commands.set(SlashCommandEnum.Translate, new TranslateCommand(bot));
     this.commands.set(SlashCommandEnum.Say, new SayCommand(bot));
+    this.commands.set(SlashCommandEnum.Schedule, new ScheduleCommand(bot));
   }
 
   getByName(name: string) {
-    return this.commands.get(name);
+    const command = this.commands.get(name);
+
+    if (!command) throw new Error(`Command ${name} not found`);
+
+    return command;
   }
 
   toREST() {

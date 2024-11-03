@@ -15,12 +15,12 @@ export class Conversations {
   }
 
   existBy(id: string) {
-    return this.bot.conversationRepository.getByPk(id) !== null;
+    return this.bot.conversationRepository.getOneByPk(id) !== null;
   }
 
   getBy(id: string, context: Context) {
     context.logger.info(`Getting conversation by id ${id}`);
-    const entity = this.bot.conversationRepository.getByPk(id);
+    const entity = this.bot.conversationRepository.getOneByPk(id);
 
     if (!entity) {
       context.logger.info(`Conversation not found by id ${id}`);
@@ -54,7 +54,11 @@ export class Conversations {
 
   private getInstanceBy(conversation: ConversationsEntity): Conversation {
     if (conversation.strategy === StrategyEnum.OpenAI) {
-      return new OpenAiStrategy(conversation.id, this.bot.conversationRepository, this.bot.messagesRepository);
+      return new OpenAiStrategy(
+        conversation.id,
+        this.bot.conversationRepository,
+        this.bot.messagesRepository,
+      );
     }
 
     throw new Error(`Unsupported strategy ${conversation.strategy}`);

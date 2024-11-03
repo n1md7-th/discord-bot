@@ -26,12 +26,15 @@ export class ConversationsRepository implements ReadInterface<ConversationsEntit
     return this.findAllQuery.as(ConversationsEntity).all({ offset, limit });
   }
 
-  getByPk(id: string): ConversationsEntity | null {
+  getOneByPk(id: string): ConversationsEntity | null {
     return this.findByPkQuery.as(ConversationsEntity).get({ id });
   }
 
   create(
-    payload: Omit<ConversationsEntity, 'createdAt' | 'updatedAt' | 'counter' | 'threshold' | 'status'>,
+    payload: Omit<
+      ConversationsEntity,
+      'createdAt' | 'updatedAt' | 'counter' | 'threshold' | 'status'
+    >,
   ): ConversationsEntity {
     const entity = ConversationsEntity.from({
       ...payload,
@@ -50,21 +53,21 @@ export class ConversationsRepository implements ReadInterface<ConversationsEntit
   }
 
   hasReachedThreshold(id: string): boolean {
-    const entity = this.getByPk(id);
+    const entity = this.getOneByPk(id);
     if (!entity) return false;
 
     return entity?.counter >= entity?.threshold;
   }
 
   increaseThreshold(id: string, value: number) {
-    const entity = this.getByPk(id);
+    const entity = this.getOneByPk(id);
     if (!entity) return;
 
     return this.increaseThresholdQuery.run({ id, value });
   }
 
   increaseMessageCounter(id: string) {
-    const entity = this.getByPk(id);
+    const entity = this.getOneByPk(id);
     if (!entity) return;
 
     return this.increaseMessageCounterQuery.run({ id });
@@ -79,7 +82,9 @@ export class ConversationsRepository implements ReadInterface<ConversationsEntit
   }
 
   isDisabled(id: string): boolean {
-    return this.selectStatusQuery.as(ConversationsEntity).get({ id })?.status === StatusEnum.Inactive;
+    return (
+      this.selectStatusQuery.as(ConversationsEntity).get({ id })?.status === StatusEnum.Inactive
+    );
   }
 
   private createSelectStatusQuery() {
