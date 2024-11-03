@@ -1,7 +1,11 @@
-export class Job {
-  private readonly id: Timer;
+import type { SchedulesEntity } from '@db/entities/schedules.entity.ts';
 
-  constructor(runAt: number, job: () => Promise<void>) {
+export class Job {
+  readonly id: Timer;
+  readonly entity: SchedulesEntity;
+
+  constructor(runAt: number, entity: SchedulesEntity, job: () => Promise<void>) {
+    this.entity = entity;
     this.id = setTimeout(job, runAt);
   }
 

@@ -25,7 +25,11 @@ export class SlashCommands {
   }
 
   getByName(name: string) {
-    return this.commands.get(name);
+    const command = this.commands.get(name);
+
+    if (!command) throw new Error(`Command ${name} not found`);
+
+    return command;
   }
 
   toREST() {

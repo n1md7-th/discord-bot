@@ -1,4 +1,4 @@
-import { Logger } from '../../utils/logger.ts';
+import { Logger } from '@utils/logger.ts';
 import { MigrationsEntity } from '../entities/migrations.entity.ts';
 import { MigrationsCreate } from '../migrations/scripts/migrations.create.ts';
 import type { Database, Statement } from 'bun:sqlite';

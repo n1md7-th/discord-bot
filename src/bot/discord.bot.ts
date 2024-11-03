@@ -22,7 +22,9 @@ import { type Database, SQLiteError } from 'bun:sqlite';
 import chalk from 'chalk';
 import {
   ActivityType,
+  type AutocompleteInteraction,
   type CacheType,
+  type ChatInputCommandInteraction,
   Client,
   Events,
   GatewayIntentBits,
@@ -198,8 +200,11 @@ export class DiscordBot {
     const context = Context.fromMessage(message);
 
     const messages = [chalk.blueBright(`[SENT]`)];
-    if (message.attachments.size) messages.push(`${chalk.blueBright(`[ATTACHMENTS ${message.attachments.size}]`)}`);
-    context.logger.info(messages.join(':') + `: ${this.services.unicode.toNormalized(message.content)}`);
+    if (message.attachments.size)
+      messages.push(`${chalk.blueBright(`[ATTACHMENTS ${message.attachments.size}]`)}`);
+    context.logger.info(
+      messages.join(':') + `: ${this.services.unicode.toNormalized(message.content)}`,
+    );
 
     if (message.author.bot) return;
 
@@ -243,9 +248,14 @@ export class DiscordBot {
     );
   }
 
-  private async onMessageReactionAdd(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
+  private async onMessageReactionAdd(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser,
+  ) {
     const context = Context.fromReaction(reaction, user);
-    context.logger.info(`${chalk.blueBright('[REACTED]')}: ${emoji.unemojify(reaction.emoji.name || '🐾')}`);
+    context.logger.info(
+      `${chalk.blueBright('[REACTED]')}: ${emoji.unemojify(reaction.emoji.name || '🐾')}`,
+    );
 
     if (user.bot) return;
 
@@ -262,18 +272,33 @@ export class DiscordBot {
     }
   }
 
-  private onMessageReactionRemove(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
+  private onMessageReactionRemove(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser,
+  ) {
     const context = Context.fromReaction(reaction, user);
-    context.logger.info(`${chalk.redBright('[UNREACTED]')}: ${emoji.unemojify(reaction.emoji.name || '🐾')}`);
+    context.logger.info(
+      `${chalk.redBright('[UNREACTED]')}: ${emoji.unemojify(reaction.emoji.name || '🐾')}`,
+    );
   }
 
   private async onInteractionCreate(interaction: Interaction<CacheType>) {
-    if (!interaction.isChatInputCommand()) return;
-
-    const command = this.slashCommands.getByName(interaction.commandName);
-    if (!command) return;
-
     const context = Context.fromInteraction(interaction);
+
+    if (interaction.isChatInputCommand()) {
+      return await this.handleInputCommand(interaction, context);
+    }
+
+    if (interaction.isAutocomplete()) {
+      return await this.handleAutocomplete(interaction, context);
+    }
+  }
+
+  private async handleInputCommand(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ) {
+    const command = this.slashCommands.getByName(interaction.commandName);
 
     context.logger.info(`Slash command received: ${interaction.commandName}`);
 
@@ -292,6 +317,20 @@ export class DiscordBot {
           ephemeral: true,
         });
       }
+    }
+  }
+
+  private async handleAutocomplete(
+    interaction: AutocompleteInteraction<CacheType>,
+    context: Context,
+  ) {
+    const command = this.slashCommands.getByName(interaction.commandName);
+
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      context.logger.error('Autocomplete error:', error);
+      await interaction.respond([]);
     }
   }
 
