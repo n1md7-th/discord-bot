@@ -178,3 +178,5 @@ dist
 
 .dbs/sqlite.db
 .dbs/*
+*.db
+*.backup
