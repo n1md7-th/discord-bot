@@ -1,6 +1,7 @@
 import type { DiscordBot } from '@bot/discord.bot.ts';
-import { SchedulesEntity } from '@db/entities/schedules.entity.ts';
 import { SchedulerSendStrategy, SchedulerStatusEnum } from '@db/enums/scheduler.enum.ts';
+import * as schedulerRepository from '@db/workers/repositories/scheduler.repository.ts';
+import type { CreateOnePayload, ScheduleEntityType } from '@db/workers/types/scheduler.type.ts';
 import { Job } from '@services/job.service.ts';
 
 export class SchedulerService {
@@ -14,29 +15,33 @@ export class SchedulerService {
     this.scheduleJobs();
   }
 
-  async create(payload: Omit<SchedulesEntity, 'createdAt' | 'updatedAt' | 'id' | 'status'>) {
-    const entity = SchedulesEntity.from(payload);
+  async create(payload: CreateOnePayload) {
+    const record = await schedulerRepository.createOne(payload);
 
-    this.bot.schedulesRepository.createOneBy(entity);
-
-    this.scheduleJob(entity);
+    this.scheduleJob(record);
   }
 
-  cancelOneBy(pk: string) {
+  async cancelOneBy(pk: string) {
     const job = this.jobs.get(pk);
     if (!job) return this.bot.logger.error(`Job ${pk} not found`);
 
-    this.bot.schedulesRepository.updateOneByPk(pk, SchedulerStatusEnum.Cancelled);
+    await schedulerRepository.updateStatusByPk({
+      id: pk,
+      status: SchedulerStatusEnum.Cancelled,
+    });
 
     this.cancelJob(job);
   }
 
-  getManyByUserId(userId: string) {
-    return this.bot.schedulesRepository.getManyByUser(userId);
+  async getManyByUserId(userId: string) {
+    return await schedulerRepository.getAllByUserId({ userId });
   }
 
-  cancelManyByUserId(userId: string) {
-    this.bot.schedulesRepository.updateManyByUser(userId, SchedulerStatusEnum.Cancelled);
+  async cancelManyByUserId(userId: string) {
+    await schedulerRepository.updateStatusByUserId({
+      userId,
+      status: SchedulerStatusEnum.Cancelled,
+    });
 
     this.jobs.forEach((job, pk) => {
       if (job.entity.userId === userId) {
@@ -50,16 +55,14 @@ export class SchedulerService {
     this.jobs.delete(job.entity.id); // Remove the job from the memory
   }
 
-  private scheduleJob(entity: SchedulesEntity) {
-    if (!entity.id) return this.bot.logger.error('Missing id in entity', entity);
+  private scheduleJob(entity: ScheduleEntityType) {
+    // We only want active jobs to be scheduled
     if (entity.status !== SchedulerStatusEnum.Active) return;
 
     const runAt = this.getDelayInMs(entity.runAt);
 
     if (runAt < 0) {
-      return this.bot.logger.error(
-        `Job ${entity.id} is already late as the runAt time is ${runAt}ms`,
-      );
+      return this.reportExpiredJob(entity.id, runAt);
     }
 
     const job = new Job(runAt, entity, async () => {
@@ -78,12 +81,18 @@ export class SchedulerService {
             break;
         }
 
-        this.bot.schedulesRepository.updateOneByPk(entity.id, SchedulerStatusEnum.Completed);
+        await schedulerRepository.updateStatusByPk({
+          id: entity.id,
+          status: SchedulerStatusEnum.Completed,
+        });
         this.bot.logger.info(`Job ${entity.id} completed`);
       } catch (error) {
         this.bot.logger.error(`Failed to run job ${entity.id}`);
         this.bot.logger.error(error);
-        this.bot.schedulesRepository.updateOneByPk(entity.id, SchedulerStatusEnum.Failed);
+        await schedulerRepository.updateStatusByPk({
+          id: entity.id,
+          status: SchedulerStatusEnum.Failed,
+        });
       }
     });
 
@@ -97,6 +106,12 @@ export class SchedulerService {
   }
 
   private scheduleJobs() {
-    this.bot.schedulesRepository.getAll(1000).forEach((schedule) => this.scheduleJob(schedule));
+    schedulerRepository.getAll().then((jobs) => {
+      jobs.forEach(this.scheduleJob.bind(this));
+    });
+  }
+
+  private reportExpiredJob(id: string, runAt: number) {
+    this.bot.logger.error(`Job ${id} is already late as the runAt time is ${runAt}ms`);
   }
 }

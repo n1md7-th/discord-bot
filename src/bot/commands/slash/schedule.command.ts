@@ -1,16 +1,17 @@
-import { SlashCommandHandler } from '@bot/abstract/handlers/slash.command.ts';
-import {
-  SchedulerAuthorStrategy,
-  SchedulerSendStrategy,
-  SchedulerStatusEnum,
-} from '@db/enums/scheduler.enum.ts';
-import type { Context } from '@utils/context.ts';
 import {
   AutocompleteInteraction,
   type CacheType,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from 'discord.js';
+import { SlashCommandHandler } from '@bot/abstract/handlers/slash.command.ts';
+import * as schedulerRepository from '@db/workers/repositories/scheduler.repository.ts';
+import {
+  SchedulerAuthorStrategy,
+  SchedulerSendStrategy,
+  SchedulerStatusEnum,
+} from '@db/enums/scheduler.enum.ts';
+import type { Context } from '@utils/context.ts';
 import ms from 'ms';
 
 export class ScheduleCommand extends SlashCommandHandler {
@@ -20,14 +21,35 @@ export class ScheduleCommand extends SlashCommandHandler {
       .setDescription('Schedule or cancel a message')
       .addSubcommand((subcommand) =>
         subcommand
-          .setName('create')
-          .setDescription('Create a new scheduled task')
+          .setName('create-channel-message')
+          .setDescription('Create a new scheduled task to send a message in a channel')
           .addStringOption((option) =>
             option
               .setName('when')
               .setDescription('Choose a time to schedule')
               .setRequired(true)
               .addChoices(...this.getChoices()),
+          )
+          .addStringOption((option) =>
+            option.setName('name').setDescription('Name of the schedule').setRequired(true),
+          )
+          .addStringOption((option) =>
+            option.setName('text').setDescription('Text to be scheduled').setRequired(true),
+          ),
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName('create-direct-message')
+          .setDescription('Create a new scheduled task in DM')
+          .addStringOption((option) =>
+            option
+              .setName('when')
+              .setDescription('Choose a time to schedule')
+              .setRequired(true)
+              .addChoices(...this.getChoices()),
+          )
+          .addUserOption((option) =>
+            option.setName('to').setDescription('User to send the message').setRequired(true),
           )
           .addStringOption((option) =>
             option.setName('name').setDescription('Name of the schedule').setRequired(true),
@@ -60,8 +82,11 @@ export class ScheduleCommand extends SlashCommandHandler {
     const subcommand = interaction.options.getSubcommand();
 
     switch (subcommand) {
-      case 'create':
-        await this.handleCreateCommand(interaction, context);
+      case 'create-channel-message':
+        await this.handleCreateChannelCommand(interaction, context);
+        break;
+      case 'create-direct-message':
+        await this.handleCreateDirectMessageCommand(interaction, context);
         break;
       case 'cancel':
         await this.handleCancelCommand(interaction, context);
@@ -75,8 +100,8 @@ export class ScheduleCommand extends SlashCommandHandler {
     const focusedOption = interaction.options.getFocused(true);
 
     if (focusedOption.name === 'schedule_id') {
-      const options = this.bot.schedules
-        .getManyByUserId(interaction.user.id)
+      const jobs = await schedulerRepository.getAllByUserId({ userId: interaction.user.id });
+      const options = jobs
         .filter((task) => task.status === SchedulerStatusEnum.Active)
         .map((task, id) => ({
           name: `#${id}, Task "${task.name}", scheduled at: ${this.getFormattedDate(task.runAt)}`,
@@ -92,7 +117,7 @@ export class ScheduleCommand extends SlashCommandHandler {
     }
   }
 
-  private async handleCreateCommand(
+  private async handleCreateChannelCommand(
     interaction: ChatInputCommandInteraction<CacheType>,
     context: Context,
   ) {
@@ -101,13 +126,11 @@ export class ScheduleCommand extends SlashCommandHandler {
     const when = interaction.options.getString('when', true);
 
     try {
-      if (!interaction.channel?.id) {
-        await interaction.followUp({
+      if (!interaction.channel) {
+        return await interaction.followUp({
           content: 'This command is only available in a server',
           ephemeral: true,
         });
-
-        return void 0;
       }
 
       await this.bot.schedules.create({
@@ -116,18 +139,51 @@ export class ScheduleCommand extends SlashCommandHandler {
         payload: text,
         targetId: interaction.channel.id,
         runAt: this.calculatedRunAt(when),
-        authorStrategy: SchedulerAuthorStrategy.Bot,
         sendStrategy: SchedulerSendStrategy.Channel,
+        authorStrategy: SchedulerAuthorStrategy.Bot,
       });
 
       await interaction.followUp({
-        content: `Scheduled message to be sent in ${when}`,
+        content: `Scheduled message to be sent in ${when} in this channel`,
         ephemeral: true,
       });
     } catch (error) {
-      context.logger.error('Failed to send the message', error);
+      context.logger.error('Failed to send the (channel)message', error);
       await interaction.followUp({
-        content: 'Failed to send the message',
+        content: 'Failed to send the (channel)message',
+        ephemeral: true,
+      });
+    }
+  }
+
+  private async handleCreateDirectMessageCommand(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ) {
+    const text = interaction.options.getString('text', true);
+    const name = interaction.options.getString('name', true);
+    const when = interaction.options.getString('when', true);
+    const to = interaction.options.getUser('to', true);
+
+    try {
+      await this.bot.schedules.create({
+        name,
+        userId: interaction.user.id,
+        payload: text,
+        targetId: to.id,
+        runAt: this.calculatedRunAt(when),
+        sendStrategy: SchedulerSendStrategy.DM,
+        authorStrategy: SchedulerAuthorStrategy.Bot,
+      });
+
+      await interaction.followUp({
+        content: `Scheduled (DM)message to be sent in ${when} to ${to.username}`,
+        ephemeral: true,
+      });
+    } catch (error) {
+      context.logger.error('Failed to send the (DM)message', error);
+      await interaction.followUp({
+        content: 'Failed to send the (DM)message',
         ephemeral: true,
       });
     }
@@ -141,7 +197,7 @@ export class ScheduleCommand extends SlashCommandHandler {
 
     try {
       if (taskId === 'all') {
-        this.bot.schedules.cancelManyByUserId(interaction.user.id);
+        await this.bot.schedules.cancelManyByUserId(interaction.user.id);
         await interaction.followUp({
           content: 'All scheduled messages have been cancelled',
           ephemeral: true,
@@ -149,7 +205,7 @@ export class ScheduleCommand extends SlashCommandHandler {
         return void 0;
       }
 
-      this.bot.schedules.cancelOneBy(taskId);
+      await this.bot.schedules.cancelOneBy(taskId);
       await interaction.followUp({
         content: `Scheduled message with ID ${taskId} has been cancelled`,
         ephemeral: true,
