@@ -1,4 +1,3 @@
-import * as scheduler from '@db/workers/repositories/scheduler.repository.ts';
 import { DiscordBot } from './bot/discord.bot.ts';
 import { token } from './config';
 import { connection } from './db/connection.ts';
@@ -7,7 +6,7 @@ import { Logger } from './utils/logger.ts';
 const logger = new Logger({ label: 'Bot' });
 const discordBot = new DiscordBot(logger, connection);
 const stopServiceExecution = () => {
-  scheduler.serializeDatabase().finally(() => process.exit(0));
+  process.exit(1);
 };
 
 discordBot
@@ -27,26 +26,5 @@ process
   .on('SIGINT', stopServiceExecution) // Ctrl + C
   .on('uncaughtException', (error, origin) => {
     logger.error('Uncaught exception:', error, origin);
-    process.exit(1);
+    stopServiceExecution();
   });
-
-await Promise.all([
-  scheduler.insertOne('Hello, World!'),
-  scheduler.insertOne('Hello, Deno!'),
-  scheduler.insertOne('Hello, TypeScript!'),
-  scheduler.insertOne('Hello, SQLite!'),
-  scheduler.insertOne('Hello, Worker!'),
-]);
-
-setInterval(() => {
-  Promise.all([
-    scheduler.insertOne('Hola, Mundo!'),
-    scheduler.insertOne('Hola, Deno!'),
-    scheduler.insertOne('Hola, TypeScript!'),
-  ]);
-}, 3000);
-const data = await scheduler.fetchMany();
-
-logger.info('Data:', data);
-
-// scheduler.terminate();

@@ -1,5 +1,8 @@
 export enum OperationEnum {
-  InsertOne = 'INSERT_ONE',
-  FetchMany = 'FETCH_MANY',
-  Serialize = 'SERIALIZE',
+  GetAll = 'GetAll',
+  GetAllByUser = 'getAllByUser',
+  GetOneByPk = 'GetOneByPk',
+  CreateOne = 'CreateOne',
+  UpdateStatusByPk = 'UpdateStatusByPk',
+  UpdateStatusByUserId = 'UpdateStatusByUserId',
 }

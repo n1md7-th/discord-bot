@@ -1,36 +1,29 @@
 import { OperationEnum } from '@db/workers/enums/operation.enum.ts';
+import type { ResponseType } from '@db/workers/types/operation.type.ts';
 import { idGenerator } from '@utils/id.generator.ts';
 
 const it = idGenerator();
-type Options = {
+type Options<Payload = unknown> = {
   operation: OperationEnum;
-  payload?: unknown;
+  payload?: Payload;
   timeout?: number;
 };
 export const operation =
-  <R = unknown>(worker: Worker) =>
-  ({ payload, operation, timeout = 5000 }: Options): Promise<R> => {
+  <Req = unknown, Res = null>(worker: Worker) =>
+  ({ payload, operation, timeout = 5000 }: Options<Req>): Promise<Res> => {
     const id = it.next().value;
     return new Promise((resolve, reject) => {
       const abort = setTimeout(() => reject(new Error(`Operation ${operation} Timeout`)), timeout);
 
-      const onMessage = (event: MessageEvent<{ id: number } & R>) => {
+      const onMessage = (event: MessageEvent<ResponseType<Res>>) => {
         if (event.data.id !== id) return;
 
         worker.removeEventListener('message', onMessage);
-        worker.removeEventListener('error', onError);
         clearTimeout(abort);
-        resolve(event.data);
+
+        event.data.failed ? reject(event.data.response) : resolve(event.data.response);
       };
 
-      const onError = (event: ErrorEvent) => {
-        worker.removeEventListener('message', onMessage);
-        worker.removeEventListener('error', onError);
-        clearTimeout(abort);
-        reject(event.error);
-      };
-
-      worker.addEventListener('error', onError);
       worker.addEventListener('message', onMessage);
 
       worker.postMessage({ operation, id, payload });

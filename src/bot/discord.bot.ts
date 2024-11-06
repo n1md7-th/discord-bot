@@ -8,16 +8,15 @@ import { UrlAnalyzer } from '@bot/handlers/analyzers/url.analyzer.ts';
 import { ChannelHandler } from '@bot/handlers/message-create/channel.handler.ts';
 import { HelpHandler } from '@bot/handlers/message-create/help.handler.ts';
 import { ThreadHandler } from '@bot/handlers/message-create/thread.handler.ts';
-import { SchedulesRepository } from '@db/repositories/schedules.repository.ts';
-import { UrlAnalyzerService } from '@services/analyzer.service.ts';
 import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
 import { MessagesRepository } from '@db/repositories/messages.repository.ts';
+import { UrlAnalyzerService } from '@services/analyzer.service.ts';
 import { SchedulerService } from '@services/scheduler.service.ts';
+import { UnicodeService } from '@services/unicode.service.ts';
 import { WebhookService } from '@services/webhook.service.ts';
 import { Context } from '@utils/context.ts';
 import { Logger } from '@utils/logger.ts';
 import { NameMaker } from '@utils/name.maker.ts';
-import { UnicodeService } from '@services/unicode.service.ts';
 import { type Database, SQLiteError } from 'bun:sqlite';
 import chalk from 'chalk';
 import {
@@ -35,7 +34,6 @@ import {
   type PartialMessageReaction,
   Partials,
   type PartialUser,
-  TextChannel,
   type User,
 } from 'discord.js';
 import * as emoji from 'node-emoji';
@@ -60,7 +58,6 @@ export class DiscordBot {
 
   readonly conversationRepository: ConversationsRepository;
   readonly messagesRepository: MessagesRepository;
-  readonly schedulesRepository: SchedulesRepository;
 
   id!: string;
   tag!: string;
@@ -79,7 +76,6 @@ export class DiscordBot {
   ) {
     this.conversationRepository = new ConversationsRepository(connection);
     this.messagesRepository = new MessagesRepository(connection);
-    this.schedulesRepository = new SchedulesRepository(connection);
     this.conversations = new Conversations(this);
     this.schedules = new SchedulerService(this);
     this.reactionCommands = new ReactionCommands(this);
@@ -165,7 +161,7 @@ export class DiscordBot {
   async sendChannel(channelId: string, text: string) {
     const channel = await this.client.channels.fetch(channelId);
 
-    if (channel instanceof TextChannel) return await channel.send(text);
+    if (channel && 'send' in channel) return await channel.send(text);
 
     return this.logger.error('Channel is not a text channel to send a message');
   }
