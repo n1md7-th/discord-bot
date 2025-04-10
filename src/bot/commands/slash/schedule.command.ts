@@ -23,10 +23,13 @@ export class ScheduleCommand extends SlashCommandHandler {
         subcommand
           .setName('create-channel-message')
           .setDescription('Create a new scheduled task to send a message in a channel')
+          .addIntegerOption((option) =>
+            option.setName('in').setDescription('Choose time value').setRequired(true),
+          )
           .addStringOption((option) =>
             option
-              .setName('when')
-              .setDescription('Choose a time to schedule')
+              .setName('unit')
+              .setDescription('Choose time unit')
               .setRequired(true)
               .addChoices(...this.getChoices()),
           )
@@ -41,15 +44,15 @@ export class ScheduleCommand extends SlashCommandHandler {
         subcommand
           .setName('create-direct-message')
           .setDescription('Create a new scheduled task in DM')
+          .addIntegerOption((option) =>
+            option.setName('in').setDescription('Choose time value').setRequired(true),
+          )
           .addStringOption((option) =>
             option
-              .setName('when')
-              .setDescription('Choose a time to schedule')
+              .setName('unit')
+              .setDescription('Choose time unit')
               .setRequired(true)
               .addChoices(...this.getChoices()),
-          )
-          .addUserOption((option) =>
-            option.setName('to').setDescription('User to send the message').setRequired(true),
           )
           .addStringOption((option) =>
             option.setName('name').setDescription('Name of the schedule').setRequired(true),
@@ -123,7 +126,9 @@ export class ScheduleCommand extends SlashCommandHandler {
   ) {
     const text = interaction.options.getString('text', true);
     const name = interaction.options.getString('name', true);
-    const when = interaction.options.getString('when', true);
+    const __in = interaction.options.getInteger('in', true);
+    const unit = interaction.options.getString('unit', true);
+    const when = `${__in}${unit}`;
 
     try {
       if (!interaction.channel) {
@@ -162,7 +167,9 @@ export class ScheduleCommand extends SlashCommandHandler {
   ) {
     const text = interaction.options.getString('text', true);
     const name = interaction.options.getString('name', true);
-    const when = interaction.options.getString('when', true);
+    const __in = interaction.options.getInteger('in', true);
+    const unit = interaction.options.getString('unit', true);
+    const when = `${__in}${unit}`;
     const to = interaction.options.getUser('to', true);
 
     try {
@@ -226,56 +233,32 @@ export class ScheduleCommand extends SlashCommandHandler {
   private getChoices() {
     return [
       {
-        name: 'In 5 seconds',
-        value: '5s',
+        name: 'Seconds',
+        value: 's',
       },
       {
-        name: 'In 30 seconds',
-        value: '30s',
+        name: 'Minutes',
+        value: 'm',
       },
       {
-        name: 'In 1 minute',
-        value: '1m',
+        name: 'Hours',
+        value: 'h',
       },
       {
-        name: 'In 5 minutes',
-        value: '5m',
+        name: 'Days',
+        value: 'd',
       },
       {
-        name: 'In 15 minutes',
-        value: '15m',
+        name: 'Weeks',
+        value: 'w',
       },
       {
-        name: 'In 30 minutes',
-        value: '30m',
+        name: 'Months',
+        value: 'm',
       },
       {
-        name: 'In 1 hour',
-        value: '1h',
-      },
-      {
-        name: 'In 2 hours',
-        value: '2h',
-      },
-      {
-        name: 'In 6 hours',
-        value: '6h',
-      },
-      {
-        name: 'In 12 hours',
-        value: '12h',
-      },
-      {
-        name: 'In 1 day',
-        value: '1d',
-      },
-      {
-        name: 'In 2 days',
-        value: '2d',
-      },
-      {
-        name: 'In 1 week',
-        value: '1w',
+        name: 'Years',
+        value: 'y',
       },
     ];
   }
