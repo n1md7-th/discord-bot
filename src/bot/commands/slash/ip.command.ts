@@ -1,4 +1,5 @@
 import type { Context } from '@utils/context.ts';
+import { networkInterfaces } from 'os';
 import { type CacheType, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { SlashCommandHandler } from '../../abstract/handlers/slash.command.ts';
 
@@ -7,13 +8,21 @@ export class IpCommand extends SlashCommandHandler {
     return new SlashCommandBuilder().setName('ip').setDescription('Replies with server IP!');
   }
 
-  async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
+  async execute(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ): Promise<void> {
     await interaction.deferReply({ ephemeral: true }); // Shows "App thinking..." status
 
-    await interaction.editReply(`Server IP: **${await this.getIp(context)}**`);
+    await interaction.editReply(
+      [
+        `Server Global IP: **${await this.getGlobalIp(context)}**`,
+        `Server Local IP: **${await this.getLocalIp(context)}**`,
+      ].join('\n'),
+    );
   }
 
-  private async getIp(context: Context) {
+  private async getGlobalIp(context: Context) {
     context.logger.info('Getting IP address...');
 
     return await Promise.allSettled([this.getFromIfconfig(), this.getFromIpify()])
@@ -31,6 +40,20 @@ export class IpCommand extends SlashCommandHandler {
       .finally(() => {
         context.logger.info('IP address retrieved');
       });
+  }
+
+  private async getLocalIp(context: Context) {
+    const localIp = Object.values(networkInterfaces())
+      .flat()
+      .find((iface) => {
+        if (!iface) return false;
+        if (iface.family !== 'IPv4') return false;
+        if (iface.internal) return false;
+
+        return true;
+      })?.address;
+
+    return localIp || 'Unable to get local IP address';
   }
 
   private async getFromIfconfig() {
