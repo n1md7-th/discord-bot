@@ -43,17 +43,20 @@ export class IpCommand extends SlashCommandHandler {
   }
 
   private async getLocalIp(context: Context) {
-    const localIp = Object.values(networkInterfaces())
-      .flat()
-      .find((iface) => {
-        if (!iface) return false;
-        if (iface.family !== 'IPv4') return false;
-        if (iface.internal) return false;
+    return (
+      Object.values(networkInterfaces())
+        .flat()
+        .reduce((ips, iface) => {
+          if (!iface) return ips;
+          if (iface.family !== 'IPv4') return ips;
+          if (iface.internal) return ips;
 
-        return true;
-      })?.address;
+          ips.push(iface.address);
 
-    return localIp || 'Unable to get local IP address';
+          return ips;
+        }, [] as string[])
+        .join('; ') || 'Unable to get local IP address'
+    );
   }
 
   private async getFromIfconfig() {
