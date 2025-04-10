@@ -3,7 +3,8 @@ import type { Context } from '@utils/context.ts';
 import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 
 export class ThreadHandler extends CreateHandler {
-  private readonly thresholdReachedMessage = "I'm sorry, that is too many messages for this conversation.";
+  private readonly thresholdReachedMessage =
+    "I'm sorry, that is too many messages for this conversation.";
 
   async handle(message: Message, context: Context) {
     context.logger.info('Thread handler invoked');
@@ -27,7 +28,12 @@ export class ThreadHandler extends CreateHandler {
       }
 
       await message.channel.sendTyping();
-      const response = await threadConversation.addUserMessage(content).sendRequest(context, this.bot.messageLimit);
+      message.attachments.forEach((attachment) =>
+        threadConversation.addUserAttachment(attachment.url),
+      );
+      const response = await threadConversation
+        .addUserMessage(content)
+        .sendRequest(context, this.bot.messageLimit);
 
       context.logger.info(
         `ResponseSize: ${response.size}. Limit: ${this.bot.messageLimit}. Chunks: ${response.chunks.length}.`,

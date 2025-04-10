@@ -56,6 +56,14 @@ export class ChannelHandler extends CreateHandler {
   }
 
   private createConversation(message: Message, thread: AnyThreadChannel, context: Context) {
-    return this.bot.conversations.createTechBroBy(thread.id, context).addUserMessage(message.content);
+    const conversation = this.bot.conversations
+      .createTechBroBy(thread.id, context)
+      .addUserMessage(message.content);
+
+    message.attachments.forEach((attachment) => {
+      conversation.addUserAttachment(attachment.url);
+    });
+
+    return conversation;
   }
 }
