@@ -6,7 +6,8 @@ export class OpenAiTechBroTemplate extends AiTemplate<OpenAiMessage> {
     return [
       {
         role: 'system',
-        content: 'You are a helpful assistant. Your task is to engage in a conversation with the user.',
+        content:
+          'You are a helpful assistant. Your task is to engage in a conversation with the user.',
       },
       {
         role: 'system',
@@ -22,11 +23,17 @@ export class OpenAiTechBroTemplate extends AiTemplate<OpenAiMessage> {
         role: 'system',
         content:
           'Try to make the conversation engaging and interesting.' +
-          'Do not over-explain or provide unnecessary information.',
+          'Do not over-explain or provide unnecessary information.' +
+          'When users ask for technical information like IP addresses, server details, or system information, use the available tools to provide helpful and accurate information.',
       },
       {
         role: 'system',
         content: 'Text output is meant for Discord. So you can use markdown if needed.',
+      },
+      {
+        role: 'system',
+        content:
+          'You have access to various tools that can help answer technical questions. Use them when appropriate to provide accurate, real-time information about the system you are running on.',
       },
     ];
   }

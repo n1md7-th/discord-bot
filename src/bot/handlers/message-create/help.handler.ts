@@ -1,5 +1,5 @@
 import { EmbedBuilder, type Message } from 'discord.js';
-import type { Context } from '../../../utils/context.ts';
+import type { Context } from '@utils/context.ts';
 import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 import { version } from '../../../../package.json';
 
@@ -24,14 +24,19 @@ export class HelpHandler extends CreateHandler {
           'It also has a Grammarly feature that helps you with your grammar. ' +
           'It creates a thread for you to interact with the bot.',
       )
-      .setThumbnail('https://github.com/n1md7-th/picolingus/blob/master/src/images/avatar.jpg?raw=true')
+      .setThumbnail(
+        'https://github.com/n1md7-th/picolingus/blob/master/src/images/avatar.jpg?raw=true',
+      )
       .addFields(
         {
           name: 'Summon TechBro',
           value: `Use @${this.bot.username} anywhere in the text or start the text with "Hey ${this.bot.username}" to summon TechBro`,
         },
         { name: 'Summon Grammarly', value: 'React with 📖 (Open Book) emoji to summon Grammarly' },
-        { name: 'Get explanation', value: 'React with 🤔 (Thinking Face) emoji to get an explanation' },
+        {
+          name: 'Get explanation',
+          value: 'React with 🤔 (Thinking Face) emoji to get an explanation',
+        },
       )
       .addFields({
         name: 'Supported prefix commands',

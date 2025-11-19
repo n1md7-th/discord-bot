@@ -33,7 +33,10 @@ export class Context {
     });
   }
 
-  static fromReaction(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) {
+  static fromReaction(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser,
+  ) {
     return new Context({
       messageId: reaction.message.id,
       channelId: reaction.message.channel.id,

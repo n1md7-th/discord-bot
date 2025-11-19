@@ -1,4 +1,9 @@
-import { MessageReaction, type PartialMessageReaction, type PartialUser, type User } from 'discord.js';
+import {
+  MessageReaction,
+  type PartialMessageReaction,
+  type PartialUser,
+  type User,
+} from 'discord.js';
 import type { Context } from '@utils/context.ts';
 import { DiscordBot } from '@bot/discord.bot.ts';
 

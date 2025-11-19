@@ -11,7 +11,9 @@ export class TranslateCommand extends SlashCommandHandler {
   register() {
     return new SlashCommandBuilder()
       .setName('translate')
-      .setDescription('Translates text from one language to another (Auto determines the source language)')
+      .setDescription(
+        'Translates text from one language to another (Auto determines the source language)',
+      )
       .addStringOption((option) => {
         return option
           .setRequired(true)
@@ -97,12 +99,17 @@ export class TranslateCommand extends SlashCommandHandler {
       });
   }
 
-  async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
+  async execute(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ): Promise<void> {
     const text = interaction.options.getString('text', true);
     const target = interaction.options.getString('target', true);
 
-    const withVisible = withDefault(interaction.options.getString('visible', false), 'YES') === 'YES';
-    const withSpoiler = withDefault(interaction.options.getString('spoiler', false), 'NO') === 'YES';
+    const withVisible =
+      withDefault(interaction.options.getString('visible', false), 'YES') === 'YES';
+    const withSpoiler =
+      withDefault(interaction.options.getString('spoiler', false), 'NO') === 'YES';
     const ephemeral = !withVisible;
 
     await interaction.deferReply({ ephemeral }); // When visible we show the message to everyone

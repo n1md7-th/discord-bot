@@ -1,4 +1,8 @@
-import { SchedulerAuthorStrategy, SchedulerSendStrategy, SchedulerStatusEnum } from '@db/enums/scheduler.enum.ts';
+import {
+  SchedulerAuthorStrategy,
+  SchedulerSendStrategy,
+  SchedulerStatusEnum,
+} from '@db/enums/scheduler.enum.ts';
 import { randomUUID } from 'node:crypto';
 
 export class SchedulesEntity {

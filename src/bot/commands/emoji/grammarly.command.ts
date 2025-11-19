@@ -12,9 +12,24 @@ import type { Context } from '@utils/context.ts';
 import { Randomizer } from '@utils/randomizer.ts';
 
 export class GrammarlyCommand extends ReactionCommandHandler {
-  private readonly emojis = new Randomizer(['📖', '📚', '📝', '📓', '📔', '📒', '📕', '📗', '📘', '💬']);
+  private readonly emojis = new Randomizer([
+    '📖',
+    '📚',
+    '📝',
+    '📓',
+    '📔',
+    '📒',
+    '📕',
+    '📗',
+    '📘',
+    '💬',
+  ]);
 
-  async execute(reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, context: Context) {
+  async execute(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser,
+    context: Context,
+  ) {
     context.logger.info('Grammarly command invoked');
 
     if (reaction.message.content === null) return;
@@ -67,6 +82,8 @@ export class GrammarlyCommand extends ReactionCommandHandler {
     thread: AnyThreadChannel<boolean>,
     context: Context,
   ) {
-    return this.bot.conversations.createGrammarlyBy(thread.id, context).addUserMessage(reaction.message.content!);
+    return this.bot.conversations
+      .createGrammarlyBy(thread.id, context)
+      .addUserMessage(reaction.message.content!);
   }
 }

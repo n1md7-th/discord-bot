@@ -27,6 +27,7 @@ Just add an emoji 'Open book' to your message and the bot will respond with sugg
 <summary>Example</summary>
 
 ![grammarly-example.png](images/grammarly-example.png)
+
 </details>
 
 ### TechBro Bot
@@ -38,12 +39,12 @@ asking any technology-related questions.
 <summary>Example</summary>
 
 ![tech-bro-example.png](images/tech-bro-example.png)
+
 </details>
 
 ### Clarify Bot
 
 It will explain things either text-based or visual attachments. It can be called by reacting (thinking face) to the message.
-
 
 ## Dependencies
 
@@ -51,6 +52,6 @@ It will explain things either text-based or visual attachments. It can be called
 - [Discord bot account](https://discord.com/developers/applications)
 - [OpenAI API key](https://openai.com) (With GPT-4o-mini model enabled)
 
-
 ## Commands
+
 ![help.png](images/help.png)

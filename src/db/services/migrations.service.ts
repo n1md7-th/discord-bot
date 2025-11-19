@@ -68,7 +68,9 @@ export class MigrationsService {
   }
 
   private createInsertQuery() {
-    return this.connection.prepare('INSERT INTO migrations (name, createdAt) VALUES ($name, $createdAt)');
+    return this.connection.prepare(
+      'INSERT INTO migrations (name, createdAt) VALUES ($name, $createdAt)',
+    );
   }
 
   private createDeleteQuery() {

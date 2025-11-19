@@ -153,11 +153,17 @@ self.onmessage = async (event: MessageEvent<QueryRequest>) => {
       }
 
       case OperationEnum.GetAllByUser: {
-        return message.send(event, findAllByUserQuery.all(event.data.payload) as ScheduleEntityType[]);
+        return message.send(
+          event,
+          findAllByUserQuery.all(event.data.payload) as ScheduleEntityType[],
+        );
       }
 
       case OperationEnum.GetOneByPk: {
-        return message.send(event, findByPkQuery.get({ id: event.data.payload }) as ScheduleEntityType);
+        return message.send(
+          event,
+          findByPkQuery.get({ id: event.data.payload }) as ScheduleEntityType,
+        );
       }
 
       case OperationEnum.UpdateStatusByPk: {
@@ -167,7 +173,10 @@ self.onmessage = async (event: MessageEvent<QueryRequest>) => {
       }
 
       case OperationEnum.UpdateStatusByUserId: {
-        updateStatusByUserIdQuery.run({ userId: event.data.payload.userId, status: event.data.payload.status });
+        updateStatusByUserIdQuery.run({
+          userId: event.data.payload.userId,
+          status: event.data.payload.status,
+        });
 
         return message.send(event, event.data.payload.userId);
       }

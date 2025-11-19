@@ -2,7 +2,12 @@ import { SlashCommandHandler } from '@bot/abstract/handlers/slash.command.ts';
 import { DeploymentCommand } from '@bot/commands/slash/pm2/deployment/deployment.command.ts';
 import { StatusCommand } from '@bot/commands/slash/pm2/status/status.command.ts';
 import type { Context } from '@utils/context.ts';
-import { type CacheType, ChatInputCommandInteraction, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
+import {
+  type CacheType,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from 'discord.js';
 
 export class Pm2Command extends SlashCommandHandler {
   private readonly subcommands = {
@@ -32,7 +37,10 @@ export class Pm2Command extends SlashCommandHandler {
       .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
   }
 
-  async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
+  async execute(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ): Promise<void> {
     await interaction.deferReply({ ephemeral: true });
 
     const subcommand = interaction.options.getSubcommand();

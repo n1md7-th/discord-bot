@@ -6,7 +6,8 @@ import { type MessagesRepository } from '@db/repositories/messages.repository.ts
 import { type Context } from '@utils/context.ts';
 import { Conversation } from '../abstract/abstract.conversation.ts';
 import { AiResponse } from '../response/ai.response.ts';
-import type { OpenAiMessage } from '../types/openai.ts';
+import type { ToolManager } from '@ai/tools';
+import type { ToolCall } from '@ai/tools';
 
 export class OpenAiStrategy extends Conversation {
   private readonly openai: OpenAI;
@@ -16,10 +17,9 @@ export class OpenAiStrategy extends Conversation {
     private readonly conversationId: string,
     private readonly conversations: ConversationsRepository,
     private readonly messages: MessagesRepository,
+    private readonly toolManager?: ToolManager,
   ) {
     super();
-    this.conversationId = conversationId;
-    this.messages = messages;
     this.openai = new OpenAI({
       apiKey: openAiApiKey,
       maxRetries: 3,
@@ -35,22 +35,30 @@ export class OpenAiStrategy extends Conversation {
   async sendRequest(context: Context, maxChunkSize: number = 2000) {
     try {
       context.logger.info('Sending request to OpenAI');
-      const conversation = await this.openai.chat.completions.create({
+
+      const requestParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
         model: this.model,
-        messages: this.messages.getManyByConversationId(this.conversationId).map(
-          (message) =>
-            ({
-              role: message.role,
-              content: this.getFormattedContent(message.content),
-            }) as OpenAiMessage,
-        ),
-      });
+        messages: this.buildMessagesForOpenAI(),
+      };
+
+      if (this.toolManager?.hasTools()) {
+        requestParams.tools = this.toolManager.getToolDefinitions().map((def) => ({
+          type: 'function',
+          function: def,
+        }));
+        requestParams.tool_choice = 'auto';
+      }
+
+      const completion = await this.openai.chat.completions.create(requestParams);
       context.logger.info('Request received from OpenAI');
 
-      const message = conversation.choices[0].message;
+      const message = completion.choices[0].message;
+
+      if (message.tool_calls && this.toolManager) {
+        return await this.handleToolCalls(message, context, maxChunkSize);
+      }
 
       const content = message.content || "I'm sorry, I don't understand.";
-
       this.addMessageBy(RoleEnum.Assistant, content);
 
       return new AiResponse(content, maxChunkSize);
@@ -90,8 +98,8 @@ export class OpenAiStrategy extends Conversation {
     return this.conversations.hasReachedThreshold(this.conversationId);
   }
 
-  increaseRequestsBy(value: number) {
-    return this.conversations.increaseThreshold(this.conversationId, value);
+  increaseRequestsBy(value: number): void {
+    this.conversations.increaseThreshold(this.conversationId, value);
   }
 
   isDisabled(): boolean {
@@ -126,6 +134,133 @@ export class OpenAiStrategy extends Conversation {
     });
 
     return this;
+  }
+
+  private async handleToolCalls(
+    message: OpenAI.Chat.Completions.ChatCompletionMessage,
+    context: Context,
+    maxChunkSize: number,
+  ): Promise<AiResponse> {
+    context.logger.info(`Processing ${message.tool_calls?.length} tool calls`);
+
+    const toolCalls = message.tool_calls!.map(
+      (tc) =>
+        ({
+          id: tc.id,
+          type: tc.type,
+          function: tc.function,
+        }) as ToolCall,
+    );
+
+    const toolResults = await this.toolManager!.executeMultipleToolCalls(toolCalls, context);
+
+    // Build the messages array for the follow-up request
+    const existingMessages = this.messages.getManyByConversationId(this.conversationId).map(
+      (msg) =>
+        ({
+          role: msg.role,
+          content: this.getFormattedContent(msg.content),
+        }) as OpenAI.Chat.Completions.ChatCompletionMessageParam,
+    );
+
+    // Add the assistant message with tool calls
+    const assistantMessage: OpenAI.Chat.Completions.ChatCompletionMessageParam = {
+      role: 'assistant',
+      content: message.content,
+      tool_calls: message.tool_calls,
+    };
+
+    // Add tool result messages
+    const toolMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = toolResults.map(
+      (result) => ({
+        role: 'tool',
+        tool_call_id: result.tool_call_id,
+        content: result.content,
+      }),
+    );
+
+    const allMessages = [...existingMessages, assistantMessage, ...toolMessages];
+
+    const followUpParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+      model: this.model,
+      messages: allMessages,
+    };
+
+    const followUpCompletion = await this.openai.chat.completions.create(followUpParams);
+    const followUpMessage = followUpCompletion.choices[0].message;
+    const content = followUpMessage.content || "I've completed the requested actions.";
+
+    // Store all the messages in the database
+    this.addMessageBy(
+      RoleEnum.Assistant,
+      JSON.stringify({
+        content: message.content,
+        tool_calls: message.tool_calls,
+      }),
+    );
+
+    for (const result of toolResults) {
+      this.addMessageBy(RoleEnum.Tool, JSON.stringify(result));
+    }
+
+    this.addMessageBy(RoleEnum.Assistant, content);
+
+    return new AiResponse(content, maxChunkSize);
+  }
+
+  private buildMessagesForOpenAI(): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+    const dbMessages = this.messages.getManyByConversationId(this.conversationId);
+    const openAIMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+
+    for (const msg of dbMessages) {
+      if (msg.role === 'tool') {
+        // Tool messages are stored as JSON, parse and format for OpenAI
+        try {
+          const toolResult = JSON.parse(msg.content);
+          openAIMessages.push({
+            role: 'tool',
+            tool_call_id: toolResult.tool_call_id,
+            content: toolResult.content,
+          });
+        } catch (e) {
+          // Skip malformed tool messages
+          continue;
+        }
+      } else if (msg.role === 'assistant') {
+        // Check if this is a tool call message (stored as JSON)
+        try {
+          const assistantData = JSON.parse(msg.content);
+          if (assistantData.tool_calls) {
+            openAIMessages.push({
+              role: 'assistant',
+              content: assistantData.content || null,
+              tool_calls: assistantData.tool_calls,
+            });
+          } else {
+            // Regular assistant message
+            openAIMessages.push({
+              role: 'assistant',
+              content: msg.content,
+            });
+          }
+        } catch (e) {
+          // Regular assistant message (not JSON)
+          openAIMessages.push({
+            role: 'assistant',
+            content: msg.content,
+          });
+        }
+      } else {
+        // System, user messages - check if they need JSON parsing (like attachments)
+        const content = this.getFormattedContent(msg.content);
+        openAIMessages.push({
+          role: msg.role,
+          content: content,
+        } as OpenAI.Chat.Completions.ChatCompletionMessageParam);
+      }
+    }
+
+    return openAIMessages;
   }
 
   private getFormattedContent(content: string) {

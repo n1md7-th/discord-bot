@@ -1,4 +1,8 @@
-import { SchedulerAuthorStrategy, SchedulerSendStrategy, type SchedulerStatusEnum } from '@db/enums/scheduler.enum.ts';
+import {
+  SchedulerAuthorStrategy,
+  SchedulerSendStrategy,
+  type SchedulerStatusEnum,
+} from '@db/enums/scheduler.enum.ts';
 import { OperationEnum } from '@db/workers/enums/operation.enum.ts';
 import type { RequestType } from '@db/workers/types/operation.type.ts';
 
@@ -21,7 +25,10 @@ export type Page = {
   offset?: number;
 };
 
-export type CreateOnePayload = Omit<ScheduleEntityType, 'id' | 'createdAt' | 'updatedAt' | 'status'>;
+export type CreateOnePayload = Omit<
+  ScheduleEntityType,
+  'id' | 'createdAt' | 'updatedAt' | 'status'
+>;
 export type GetAllPayload = Page;
 export type GetAllByUserIdPayload = Page & { userId: string };
 export type GetOneByPkPayload = string;
@@ -38,8 +45,14 @@ export type CreateOneRequest = RequestType<CreateOnePayload, OperationEnum.Creat
 export type GetAllRequest = RequestType<GetAllPayload, OperationEnum.GetAll>;
 export type GetAllByUserIdRequest = RequestType<GetAllByUserIdPayload, OperationEnum.GetAllByUser>;
 export type GetOneByPkRequest = RequestType<GetOneByPkPayload, OperationEnum.GetOneByPk>;
-export type UpdateStatusByPkRequest = RequestType<UpdateStatusByPkPayload, OperationEnum.UpdateStatusByPk>;
-export type UpdateStatusByUserIdRequest = RequestType<UpdateStatusByUserIdPayload, OperationEnum.UpdateStatusByUserId>;
+export type UpdateStatusByPkRequest = RequestType<
+  UpdateStatusByPkPayload,
+  OperationEnum.UpdateStatusByPk
+>;
+export type UpdateStatusByUserIdRequest = RequestType<
+  UpdateStatusByUserIdPayload,
+  OperationEnum.UpdateStatusByUserId
+>;
 
 export type QueryRequest =
   | CreateOneRequest

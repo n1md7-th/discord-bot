@@ -7,7 +7,10 @@ import { Logger } from '../utils/logger.ts';
 
 const logger = new Logger({ label: 'Migrations' });
 try {
-  const migrations = new MigrationsService(logger, connection, [new ConversationsCreate(connection), new MessagesCreate(connection)]);
+  const migrations = new MigrationsService(logger, connection, [
+    new ConversationsCreate(connection),
+    new MessagesCreate(connection),
+  ]);
 
   migrations.execute();
 } catch (error) {

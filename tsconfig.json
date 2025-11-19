@@ -34,7 +34,7 @@
       "@utils/*": ["./src/utils/*"],
       "@config/*": ["./src/config/*"],
       "@scripts/*": ["./src/scripts/*"],
-      "@services/*": ["./src/services/*"],
+      "@services/*": ["./src/services/*"]
     }
   }
 }

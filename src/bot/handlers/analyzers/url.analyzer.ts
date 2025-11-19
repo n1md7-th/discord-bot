@@ -18,13 +18,16 @@ export class UrlAnalyzer extends CreateHandler {
       return;
     }
 
-    if (!message.deletable) return context.logger.warn('No permission. Skipping the deletion of the message.');
+    if (!message.deletable)
+      return context.logger.warn('No permission. Skipping the deletion of the message.');
 
-    const newMessage = await this.replayAsUser(message, sanitizedContent, context).catch((error) => {
-      context.logger.error('Failed to replay as webhook user', error);
+    const newMessage = await this.replayAsUser(message, sanitizedContent, context).catch(
+      (error) => {
+        context.logger.error('Failed to replay as webhook user', error);
 
-      return this.replayAsBot(message, sanitizedContent);
-    });
+        return this.replayAsBot(message, sanitizedContent);
+      },
+    );
 
     await message.delete();
 

@@ -39,20 +39,28 @@ export class PingCommand extends SlashCommandHandler {
       });
   }
 
-  async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
+  async execute(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ): Promise<void> {
     const target = interaction.options.getString('target') ?? 'ALL';
 
     context.logger.info(`Pinging ${target}...`);
 
     await interaction.deferReply({ ephemeral: true });
 
-    const content = target === 'ALL' ? await this.pingAllTargets(context) : await this.pingTarget(target, context);
+    const content =
+      target === 'ALL'
+        ? await this.pingAllTargets(context)
+        : await this.pingTarget(target, context);
 
     await interaction.followUp({ content });
   }
 
   private async pingAllTargets(context: Context) {
-    const responses = await Promise.allSettled(targets.map((target) => this.pingTarget(target.value, context)));
+    const responses = await Promise.allSettled(
+      targets.map((target) => this.pingTarget(target.value, context)),
+    );
 
     return responses
       .map((result, index) => {

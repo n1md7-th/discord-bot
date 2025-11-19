@@ -12,7 +12,10 @@ export class SanitizeCommand extends SlashCommandHandler {
       .setDescription('Sanitize text from trackers. Works with any text that contains URL(s)');
   }
 
-  async execute(interaction: ChatInputCommandInteraction<CacheType>, context: Context): Promise<void> {
+  async execute(
+    interaction: ChatInputCommandInteraction<CacheType>,
+    context: Context,
+  ): Promise<void> {
     await interaction.deferReply({ ephemeral: true });
 
     await this.sanitizeUrl(interaction.options.getString('text') ?? '')
