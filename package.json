@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/main.ts",
     "start": "NODE_ENV=production bun run src/main.ts",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write ."
   },
   "devDependencies": {

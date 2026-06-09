@@ -17,11 +17,13 @@ export class Context {
   readonly logger: Logger;
   readonly messageId: string;
   readonly channelId: string;
+  readonly userId: string;
 
-  constructor(options: Required<LoggerOptions>) {
+  constructor(options: Required<LoggerOptions & { userId: string }>) {
     this.logger = new Logger(options);
     this.messageId = options.messageId;
     this.channelId = options.channelId;
+    this.userId = options.userId;
   }
 
   static fromMessage(message: Message<boolean> | PartialMessage) {
@@ -30,6 +32,7 @@ export class Context {
       channelId: message.channel.id,
       label: message.author?.username || '<Unknown User>',
       type: Context.getChannelType(message.channel),
+      userId: message.author?.id || '<Unknown User>',
     });
   }
 
@@ -38,6 +41,7 @@ export class Context {
     user: User | PartialUser,
   ) {
     return new Context({
+      userId: user.id,
       messageId: reaction.message.id,
       channelId: reaction.message.channel.id,
       label: user.username || '<Unknown User>',
@@ -47,6 +51,7 @@ export class Context {
 
   static fromInteraction(interaction: Interaction<CacheType>) {
     return new Context({
+      userId: interaction.user.id,
       messageId: interaction.id,
       channelId: interaction.channel?.id || '<Unknown Channel>',
       label: interaction.user.username || '<Unknown User>',

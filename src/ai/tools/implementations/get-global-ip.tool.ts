@@ -1,6 +1,6 @@
 import type { Context } from '@utils/context.ts';
-import { AbstractTool } from '../abstract/abstract-tool.ts';
-import type { ToolExecutionResult, ToolParameter } from '../interfaces/tool.interface.ts';
+import { AbstractTool } from '@ai/tools';
+import type { ToolExecutionResult, ToolParameter } from '@ai/tools';
 
 export class GetGlobalIpTool extends AbstractTool {
   getName(): string {

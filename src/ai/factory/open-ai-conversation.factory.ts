@@ -1,14 +1,12 @@
 import { OpenAiTranslateTemplate } from '@ai/templates/openai/translate.template.ts';
 import { StrategyEnum, TemplateEnum } from '@db/enums/conversation.enum.ts';
 import type { RoleEnum } from '@db/enums/message.enum.ts';
-import { type Conversation } from '../abstract/abstract.conversation.ts';
+import type { Conversation } from '../abstract/abstract.conversation.ts';
 import { AbstractCreator } from '../abstract/abstract.creator.ts';
-import { OpenAiStrategy } from '../strategies/openai.ts';
+import { OpenAiStrategy, type StrategyMetadata } from '../strategies/openai.ts';
 import { OpenAiClarifyTemplate } from '../templates/openai/clarify.template.ts';
 import { OpenAiTechBroTemplate } from '../templates/openai/conversation.template.ts';
 import { OpenAiGrammarlyTemplate } from '../templates/openai/grammarly.template.ts';
-import { ToolFactory } from '../tools/factory/tool-factory.ts';
-import type { ToolManager } from '../tools/manager/tool-manager.ts';
 import type { OpenAiMessage } from '../types/openai.ts';
 
 export class OpenAiConversationFactory extends AbstractCreator {
@@ -29,12 +27,13 @@ export class OpenAiConversationFactory extends AbstractCreator {
   }
 
   createTechBroBy(conversationId: string): Conversation {
-    const toolManager = ToolFactory.createDefaultToolManager();
     return this.createConversationWith(
       conversationId,
       TemplateEnum.TechBro,
       new OpenAiTechBroTemplate(),
-      toolManager,
+      {
+        useTools: true,
+      },
     );
   }
 
@@ -50,9 +49,9 @@ export class OpenAiConversationFactory extends AbstractCreator {
     conversationId: string,
     templateType: TemplateEnum,
     template: { getTemplate(): OpenAiMessage[] },
-    toolManager?: ToolManager,
+    metadata?: StrategyMetadata,
   ): Conversation {
-    const conversation = this.bot.conversationRepository.create({
+    const conversation = this.bot.conversations.conversationRepository.create({
       id: conversationId,
       template: templateType,
       strategy: StrategyEnum.OpenAI,
@@ -65,13 +64,14 @@ export class OpenAiConversationFactory extends AbstractCreator {
       content: message.content as string,
     }));
 
-    messages.forEach((message) => this.bot.messagesRepository.create(message));
+    messages.forEach((message) => this.bot.conversations.messagesRepository.create(message));
 
     return new OpenAiStrategy(
       conversation.id,
-      this.bot.conversationRepository,
-      this.bot.messagesRepository,
-      toolManager,
+      this.bot.conversations.conversationRepository,
+      this.bot.conversations.messagesRepository,
+      this.bot,
+      metadata,
     );
   }
 }

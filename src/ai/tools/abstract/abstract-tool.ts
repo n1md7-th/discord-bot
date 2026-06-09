@@ -1,21 +1,17 @@
+import type { DiscordBot } from '@bot/discord.bot.ts';
 import type { Context } from '@utils/context.ts';
-import type {
-  Tool,
-  ToolDefinition,
-  ToolExecutionResult,
-  ToolParameter,
-} from '../interfaces/tool.interface.ts';
+import type { Tool, ToolDefinition, ToolExecutionResult, ToolParameter } from '@ai/tools';
 
 export abstract class AbstractTool implements Tool {
-  abstract getName(): string;
-  abstract getDescription(): string;
-  abstract getParameters(): Record<string, ToolParameter>;
-  abstract getRequiredParameters(): string[];
+  constructor(protected readonly bot: DiscordBot) {}
 
-  protected abstract executeInternal(
-    parameters: Record<string, any>,
-    context: Context,
-  ): Promise<ToolExecutionResult>;
+  abstract getName(): string;
+
+  abstract getDescription(): string;
+
+  abstract getParameters(): Record<string, ToolParameter>;
+
+  abstract getRequiredParameters(): string[];
 
   getDefinition(): ToolDefinition {
     return {
@@ -64,6 +60,11 @@ export abstract class AbstractTool implements Tool {
 
     return this.validateParameterTypes(parameters);
   }
+
+  protected abstract executeInternal(
+    parameters: Record<string, any>,
+    context: Context,
+  ): Promise<ToolExecutionResult>;
 
   private validateParameterTypes(parameters: Record<string, any>): boolean {
     const parameterDefs = this.getParameters();

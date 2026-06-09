@@ -1,26 +1,32 @@
+import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
+import { MessagesRepository } from '@db/repositories/messages.repository.ts';
 import type { DiscordBot } from '../bot/discord.bot.ts';
 import type { ConversationsEntity } from '../db/entities/conversation.entity.ts';
-import { StrategyEnum } from '../db/enums/conversation.enum.ts';
+import { StrategyEnum, TemplateEnum } from '../db/enums/conversation.enum.ts';
 import type { Context } from '../utils/context.ts';
 import type { Conversation } from './abstract/abstract.conversation.ts';
 import type { AbstractCreator } from './abstract/abstract.creator.ts';
 import { OpenAiConversationFactory } from './factory/open-ai-conversation.factory.ts';
-import { OpenAiStrategy } from './strategies/openai.ts';
+import { OpenAiStrategy, type StrategyMetadata } from './strategies/openai.ts';
 
 export class Conversations {
+  readonly conversationRepository: ConversationsRepository;
+  readonly messagesRepository: MessagesRepository;
   private readonly openAiConversationFactory: AbstractCreator;
 
   constructor(private readonly bot: DiscordBot) {
+    this.conversationRepository = new ConversationsRepository(bot.connection);
+    this.messagesRepository = new MessagesRepository(bot.connection);
     this.openAiConversationFactory = new OpenAiConversationFactory(this.bot);
   }
 
   existBy(id: string) {
-    return this.bot.conversationRepository.getOneByPk(id) !== null;
+    return this.conversationRepository.getOneByPk(id) !== null;
   }
 
   getBy(id: string, context: Context) {
     context.logger.info(`Getting conversation by id ${id}`);
-    const entity = this.bot.conversationRepository.getOneByPk(id);
+    const entity = this.conversationRepository.getOneByPk(id);
 
     if (!entity) {
       context.logger.info(`Conversation not found by id ${id}`);
@@ -29,7 +35,9 @@ export class Conversations {
 
     context.logger.info(`Creating conversation by id ${id}`);
 
-    return this.getInstanceBy(entity);
+    return this.getInstanceBy(entity, {
+      useTools: entity.template === TemplateEnum.TechBro,
+    });
   }
 
   createTranslateBy(conversationId: string, context: Context) {
@@ -52,12 +60,17 @@ export class Conversations {
     return this.openAiConversationFactory.createClarifyBy(conversationId);
   }
 
-  private getInstanceBy(conversation: ConversationsEntity): Conversation {
+  private getInstanceBy(
+    conversation: ConversationsEntity,
+    metadata: StrategyMetadata,
+  ): Conversation {
     if (conversation.strategy === StrategyEnum.OpenAI) {
       return new OpenAiStrategy(
         conversation.id,
-        this.bot.conversationRepository,
-        this.bot.messagesRepository,
+        this.conversationRepository,
+        this.messagesRepository,
+        this.bot,
+        metadata,
       );
     }
 

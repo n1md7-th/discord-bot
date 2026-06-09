@@ -10,7 +10,7 @@ export class PicoDeployment extends Deployment {
       command: () =>
         $`
           cd ${this.path}
-          git checkout bun.lockb
+          git checkout bun.lockb bun.lock
           git pull origin master
           bun install
           pm2 reload ecosystem.config.cjs --env production

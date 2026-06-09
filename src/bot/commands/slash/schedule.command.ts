@@ -14,6 +14,12 @@ import {
 import type { Context } from '@utils/context.ts';
 import ms from 'ms';
 
+export enum SchedulerAction {
+  CreateChannelMessage = 'create-channel-message',
+  CreateDirectMessage = 'create-direct-message',
+  Cancel = 'cancel',
+}
+
 export class ScheduleCommand extends SlashCommandHandler {
   register() {
     return new SlashCommandBuilder()
@@ -21,7 +27,7 @@ export class ScheduleCommand extends SlashCommandHandler {
       .setDescription('Schedule or cancel a message')
       .addSubcommand((subcommand) =>
         subcommand
-          .setName('create-channel-message')
+          .setName(SchedulerAction.CreateChannelMessage)
           .setDescription('Create a new scheduled task to send a message in a channel')
           .addIntegerOption((option) =>
             option.setName('in').setDescription('Choose time value').setRequired(true),
@@ -42,7 +48,7 @@ export class ScheduleCommand extends SlashCommandHandler {
       )
       .addSubcommand((subcommand) =>
         subcommand
-          .setName('create-direct-message')
+          .setName(SchedulerAction.CreateDirectMessage)
           .setDescription('Create a new scheduled task in DM')
           .addIntegerOption((option) =>
             option.setName('in').setDescription('Choose time value').setRequired(true),
@@ -63,7 +69,7 @@ export class ScheduleCommand extends SlashCommandHandler {
       )
       .addSubcommand((subcommand) =>
         subcommand
-          .setName('cancel')
+          .setName(SchedulerAction.Cancel)
           .setDescription('Cancel a scheduled task')
           .addStringOption(
             (option) =>
@@ -251,10 +257,6 @@ export class ScheduleCommand extends SlashCommandHandler {
       {
         name: 'Weeks',
         value: 'w',
-      },
-      {
-        name: 'Months',
-        value: 'm',
       },
       {
         name: 'Years',

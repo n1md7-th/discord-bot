@@ -1,4 +1,4 @@
-import type { Tool, ToolDefinition } from './tool.interface.ts';
+import type { Tool, ToolDefinition } from '@ai/tools';
 
 export interface ToolRegistry {
   register(tool: Tool): void;

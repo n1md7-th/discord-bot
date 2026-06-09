@@ -1,42 +1,23 @@
+import type { ToolCall, ToolCallResult, ToolExecutor, ToolRegistry } from '@ai/tools';
 import type { Context } from '@utils/context.ts';
-import type {
-  ToolCall,
-  ToolCallResult,
-  ToolExecutor,
-} from '../interfaces/tool-executor.interface.ts';
-import type { ToolRegistry } from '../interfaces/tool-registry.interface.ts';
 
 export class DefaultToolExecutor implements ToolExecutor {
   constructor(private readonly toolRegistry: ToolRegistry) {}
 
-  async executeToolCall(toolCall: ToolCall, context: Context): Promise<ToolCallResult> {
+  async executeOne(toolCall: ToolCall, context: Context): Promise<ToolCallResult> {
     const { function: fn, id } = toolCall;
 
     try {
       const tool = this.toolRegistry.getTool(fn.name);
       if (!tool) {
-        return {
-          tool_call_id: id,
-          role: 'tool',
-          content: JSON.stringify({
-            error: `Tool '${fn.name}' not found`,
-            success: false,
-          }),
-        };
+        return this.rejectBy(`Tool '${fn.name}' not found`, id);
       }
 
       let parameters: Record<string, any>;
       try {
         parameters = JSON.parse(fn.arguments);
       } catch (parseError) {
-        return {
-          tool_call_id: id,
-          role: 'tool',
-          content: JSON.stringify({
-            error: 'Invalid tool arguments: malformed JSON',
-            success: false,
-          }),
-        };
+        return this.rejectBy('Invalid tool arguments: malformed JSON', id);
       }
 
       const result = await tool.execute(parameters, context);
@@ -48,23 +29,13 @@ export class DefaultToolExecutor implements ToolExecutor {
       };
     } catch (error) {
       context.logger.error(`Tool execution failed for ${fn.name}:`, error);
-      return {
-        tool_call_id: id,
-        role: 'tool',
-        content: JSON.stringify({
-          error: error instanceof Error ? error.message : 'Unknown error',
-          success: false,
-        }),
-      };
+      return this.rejectBy(error instanceof Error ? error.message : 'Unknown error', id);
     }
   }
 
-  async executeMultipleToolCalls(
-    toolCalls: ToolCall[],
-    context: Context,
-  ): Promise<ToolCallResult[]> {
+  async executeMany(toolCalls: ToolCall[], context: Context): Promise<ToolCallResult[]> {
     const results = await Promise.allSettled(
-      toolCalls.map((toolCall) => this.executeToolCall(toolCall, context)),
+      toolCalls.map((toolCall) => this.executeOne(toolCall, context)),
     );
 
     return results.map((result, index) => {
@@ -82,5 +53,16 @@ export class DefaultToolExecutor implements ToolExecutor {
         };
       }
     });
+  }
+
+  private rejectBy(message: string, id: string): ToolCallResult {
+    return {
+      tool_call_id: id,
+      role: 'tool',
+      content: JSON.stringify({
+        error: message,
+        success: false,
+      }),
+    };
   }
 }

@@ -8,8 +8,6 @@ import { UrlAnalyzer } from '@bot/handlers/analyzers/url.analyzer.ts';
 import { ChannelHandler } from '@bot/handlers/message-create/channel.handler.ts';
 import { HelpHandler } from '@bot/handlers/message-create/help.handler.ts';
 import { ThreadHandler } from '@bot/handlers/message-create/thread.handler.ts';
-import { ConversationsRepository } from '@db/repositories/conversations.repository.ts';
-import { MessagesRepository } from '@db/repositories/messages.repository.ts';
 import { UrlAnalyzerService } from '@services/analyzer.service.ts';
 import { SchedulerService } from '@services/scheduler.service.ts';
 import { UnicodeService } from '@services/unicode.service.ts';
@@ -56,9 +54,6 @@ export class DiscordBot {
 
   readonly handlers: Record<'thread' | 'channel' | 'help' | 'urlSanitizer', CreateHandler>;
 
-  readonly conversationRepository: ConversationsRepository;
-  readonly messagesRepository: MessagesRepository;
-
   id!: string;
   tag!: string;
   slug!: string;
@@ -74,8 +69,6 @@ export class DiscordBot {
     readonly logger: Logger,
     readonly connection: Database,
   ) {
-    this.conversationRepository = new ConversationsRepository(connection);
-    this.messagesRepository = new MessagesRepository(connection);
     this.conversations = new Conversations(this);
     this.schedules = new SchedulerService(this);
     this.reactionCommands = new ReactionCommands(this);

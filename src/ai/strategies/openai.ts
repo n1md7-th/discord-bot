@@ -1,3 +1,4 @@
+import type { DiscordBot } from '@bot/discord.bot.ts';
 import OpenAI from 'openai';
 import { openAiApiKey } from '../../config';
 import { RoleEnum } from '@db/enums/message.enum.ts';
@@ -6,18 +7,23 @@ import { type MessagesRepository } from '@db/repositories/messages.repository.ts
 import { type Context } from '@utils/context.ts';
 import { Conversation } from '../abstract/abstract.conversation.ts';
 import { AiResponse } from '../response/ai.response.ts';
-import type { ToolManager } from '@ai/tools';
-import type { ToolCall } from '@ai/tools';
+import { type ToolCall, ToolFactory, ToolManager } from '@ai/tools';
+
+export type StrategyMetadata = {
+  useTools: boolean;
+};
 
 export class OpenAiStrategy extends Conversation {
   private readonly openai: OpenAI;
   private readonly model = 'gpt-4o-mini';
+  private readonly tools: ToolManager;
 
   constructor(
     private readonly conversationId: string,
     private readonly conversations: ConversationsRepository,
     private readonly messages: MessagesRepository,
-    private readonly toolManager?: ToolManager,
+    private readonly bot: DiscordBot,
+    private readonly metadata: StrategyMetadata = { useTools: false },
   ) {
     super();
     this.openai = new OpenAI({
@@ -25,6 +31,7 @@ export class OpenAiStrategy extends Conversation {
       maxRetries: 3,
       timeout: 15_000,
     });
+    this.tools = ToolFactory.createDefaultToolManager(this.bot);
   }
 
   /**
@@ -41,8 +48,8 @@ export class OpenAiStrategy extends Conversation {
         messages: this.buildMessagesForOpenAI(),
       };
 
-      if (this.toolManager?.hasTools()) {
-        requestParams.tools = this.toolManager.getToolDefinitions().map((def) => ({
+      if (this.metadata.useTools && this.tools.hasTools()) {
+        requestParams.tools = this.tools.getToolDefinitions().map((def) => ({
           type: 'function',
           function: def,
         }));
@@ -54,8 +61,12 @@ export class OpenAiStrategy extends Conversation {
 
       const message = completion.choices[0].message;
 
-      if (message.tool_calls && this.toolManager) {
-        return await this.handleToolCalls(message, context, maxChunkSize);
+      if (message.tool_calls && this.metadata.useTools) {
+        return await this.handleToolCalls(
+          { ...message, tool_calls: message.tool_calls },
+          context,
+          maxChunkSize,
+        );
       }
 
       const content = message.content || "I'm sorry, I don't understand.";
@@ -137,13 +148,15 @@ export class OpenAiStrategy extends Conversation {
   }
 
   private async handleToolCalls(
-    message: OpenAI.Chat.Completions.ChatCompletionMessage,
+    message: OpenAI.Chat.Completions.ChatCompletionMessage & {
+      tool_calls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[];
+    },
     context: Context,
     maxChunkSize: number,
   ): Promise<AiResponse> {
-    context.logger.info(`Processing ${message.tool_calls?.length} tool calls`);
+    context.logger.info(`Processing ${message.tool_calls.length} tool calls`);
 
-    const toolCalls = message.tool_calls!.map(
+    const requestedCalls = message.tool_calls.map(
       (tc) =>
         ({
           id: tc.id,
@@ -152,7 +165,7 @@ export class OpenAiStrategy extends Conversation {
         }) as ToolCall,
     );
 
-    const toolResults = await this.toolManager!.executeMultipleToolCalls(toolCalls, context);
+    const toolResults = await this.tools.executeMany(requestedCalls, context);
 
     // Build the messages array for the follow-up request
     const existingMessages = this.messages.getManyByConversationId(this.conversationId).map(
@@ -220,7 +233,7 @@ export class OpenAiStrategy extends Conversation {
           openAIMessages.push({
             role: 'tool',
             tool_call_id: toolResult.tool_call_id,
-            content: toolResult.content,
+            content: JSON.stringify(toolResult.content),
           });
         } catch (e) {
           // Skip malformed tool messages

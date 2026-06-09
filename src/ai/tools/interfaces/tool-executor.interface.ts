@@ -1,5 +1,4 @@
 import type { Context } from '@utils/context.ts';
-import type { ToolExecutionResult } from './tool.interface.ts';
 
 export interface ToolCall {
   id: string;
@@ -17,6 +16,6 @@ export interface ToolCallResult {
 }
 
 export interface ToolExecutor {
-  executeToolCall(toolCall: ToolCall, context: Context): Promise<ToolCallResult>;
-  executeMultipleToolCalls(toolCalls: ToolCall[], context: Context): Promise<ToolCallResult[]>;
+  executeOne(call: ToolCall, context: Context): Promise<ToolCallResult>;
+  executeMany(calls: ToolCall[], context: Context): Promise<ToolCallResult[]>;
 }

@@ -2,6 +2,7 @@ import { EmbedBuilder, type Message } from 'discord.js';
 import type { Context } from '@utils/context.ts';
 import { CreateHandler } from '../../abstract/handlers/create.handler.ts';
 import { version } from '../../../../package.json';
+import type { APIEmbed } from 'discord-api-types/v10';
 
 export class HelpHandler extends CreateHandler {
   async handle(message: Message, context: Context) {
@@ -67,6 +68,7 @@ export class HelpHandler extends CreateHandler {
         value: 'Display this message',
       })
       .setTimestamp()
-      .setFooter({ text: `Version: ${version}`, iconURL: 'https://i.imgur.com/AfFp7pu.png' });
+      .setFooter({ text: `Version: ${version}`, iconURL: 'https://i.imgur.com/AfFp7pu.png' })
+      .toJSON() as APIEmbed;
   }
 }

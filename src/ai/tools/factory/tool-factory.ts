@@ -1,17 +1,26 @@
-import { DefaultToolExecutor } from '../executor/tool-executor.ts';
-import { GetGlobalIpTool } from '../implementations/get-global-ip.tool.ts';
-import { GetLocalIpTool } from '../implementations/get-local-ip.tool.ts';
-import { ToolManager } from '../manager/tool-manager.ts';
-import { DefaultToolRegistry } from '../registry/tool-registry.ts';
+import {
+  CancelScheduleMessageTool,
+  CreateScheduleMessageTool,
+  DefaultToolExecutor,
+  DefaultToolRegistry,
+  GetGlobalIpTool,
+  GetLocalIpTool,
+  GetScheduledMessagesTool,
+  ToolManager,
+} from '@ai/tools';
+import type { DiscordBot } from '@bot/discord.bot.ts';
 
 export class ToolFactory {
-  static createDefaultToolManager(): ToolManager {
+  static createDefaultToolManager(bot: DiscordBot): ToolManager {
     const registry = new DefaultToolRegistry();
     const executor = new DefaultToolExecutor(registry);
     const manager = new ToolManager(registry, executor);
 
-    manager.registerTool(new GetLocalIpTool());
-    manager.registerTool(new GetGlobalIpTool());
+    manager.registerTool(new GetLocalIpTool(bot));
+    manager.registerTool(new GetGlobalIpTool(bot));
+    manager.registerTool(new CreateScheduleMessageTool(bot));
+    manager.registerTool(new CancelScheduleMessageTool(bot));
+    manager.registerTool(new GetScheduledMessagesTool(bot));
 
     return manager;
   }

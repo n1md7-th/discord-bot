@@ -15,4 +15,5 @@ export enum SchedulerSendStrategy {
 export enum SchedulerAuthorStrategy {
   Bot = 'Bot',
   User = 'User',
+  Pico = 'Pico',
 }

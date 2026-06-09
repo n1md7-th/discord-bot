@@ -1,7 +1,7 @@
-import { networkInterfaces } from 'os';
+import type { ToolExecutionResult, ToolParameter } from '@ai/tools';
+import { AbstractTool } from '@ai/tools';
 import type { Context } from '@utils/context.ts';
-import { AbstractTool } from '../abstract/abstract-tool.ts';
-import type { ToolExecutionResult, ToolParameter } from '../interfaces/tool.interface.ts';
+import { networkInterfaces } from 'os';
 
 export class GetLocalIpTool extends AbstractTool {
   getName(): string {
